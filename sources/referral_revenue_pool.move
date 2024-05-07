@@ -8,10 +8,9 @@ module scallop_referral_program::referral_revenue_pool {
   use sui::object::{Self, UID, ID};
   use sui::table::{Self, Table};
   use sui::bag::{Self, Bag};
-  use sui::coin;
-  use sui::coin::Coin;
+  use sui::coin::{Self, Coin};
   use sui::transfer;
-  use sui::tx_context::{Self, TxContext};
+  use sui::tx_context::TxContext;
 
   use ve_sca::ve_sca::VeScaKey;
 
@@ -29,7 +28,6 @@ module scallop_referral_program::referral_revenue_pool {
     id: UID,
     revenue: BalanceBag,
     ve_sca_revenue_data: Table<ID, RevenueData>,
-    address_revenue_data: Table<address, RevenueData>,
   }
 
   /// @notice Initialize the referral revenue pool, make sure only one instance of the pool is created.
@@ -39,7 +37,6 @@ module scallop_referral_program::referral_revenue_pool {
       id: object::new(ctx),
       revenue: balance_bag::new(ctx),
       ve_sca_revenue_data: table::new(ctx),
-      address_revenue_data: table::new(ctx),
     };
     transfer::share_object(revenue_pool)
   }
@@ -63,35 +60,6 @@ module scallop_referral_program::referral_revenue_pool {
       // Get the available revenue amount for the referrer.
       let coin_type = type_name::get<CoinType>();
       let revenue_data = table::borrow_mut(&mut referral_revenue_pool.ve_sca_revenue_data, ve_sca_key_id);
-      let revenue_amount = revenue_amount(revenue_data, coin_type);
-
-      // Take the revenue from the revenue pool.
-      let revenue_balance = balance_bag::split<CoinType>(&mut referral_revenue_pool.revenue, revenue_amount);
-
-      // Decrease the revenue amount for the referrer.
-      decrease_revenue_data(revenue_data, coin_type, revenue_amount);
-
-      // Return the claimed revenue.
-      coin::from_balance(revenue_balance, ctx)
-    }
-  }
-
-  /// @notice Claim the revenue with account address, always claim all the revenue for the CoinType.
-  /// @dev This is meant to be called by the referrer with account address
-  /// @param referral_revenue_pool The referral revenue pool.
-  /// @param ctx The transaction context.
-  public fun claim_revenue_with_account_address<CoinType>(
-    referral_revenue_pool: &mut ReferralRevenuePool,
-    ctx: &mut TxContext
-  ): Coin<CoinType> {
-    let address = tx_context::sender(ctx);
-    // If the referrer does not exist, return 0 balance coin.
-    if (!table::contains(&referral_revenue_pool.address_revenue_data, address)) {
-      coin::zero(ctx)
-    } else {
-      // Get the available revenue amount for the referrer.
-      let coin_type = type_name::get<CoinType>();
-      let revenue_data = table::borrow_mut(&mut referral_revenue_pool.address_revenue_data, address);
       let revenue_amount = revenue_amount(revenue_data, coin_type);
 
       // Take the revenue from the revenue pool.
@@ -129,41 +97,6 @@ module scallop_referral_program::referral_revenue_pool {
 
     // Increase the revenue amount for the referrer.
     let revenue_data = table::borrow_mut(&mut referral_revenue_pool.ve_sca_revenue_data, ve_sca_key_id);
-    increase_revenue_data(revenue_data, coin_type, balance::value(&balance));
-
-    // Init the CoinType for the revenue bag if it does not exist.
-    if (!balance_bag::contains<CoinType>(&referral_revenue_pool.revenue)) {
-      balance_bag::init_balance<CoinType>(&mut referral_revenue_pool.revenue);
-    };
-
-    // Put the revenue into the revenue pool.
-    balance_bag::join(&mut referral_revenue_pool.revenue, balance);
-  }
-
-  /// @notice Add revenue to the address referrer
-  /// @param referral_revenue_pool The referral revenue pool.
-  /// @param address The address of the referrer.
-  /// @param balance The balance to add.
-  /// @param ctx The transaction context.
-  public(friend) fun add_revenue_to_address_referrer<CoinType>(
-    referral_revenue_pool: &mut ReferralRevenuePool,
-    address: address,
-    balance: Balance<CoinType>,
-    ctx: &mut TxContext
-  ) {
-    // Create the revenue data if it does not exist.
-    if (!table::contains(&referral_revenue_pool.address_revenue_data, address)) {
-      let revenue_data = RevenueData {
-        id: object::new(ctx),
-        bag: bag::new(ctx),
-      };
-      table::add(&mut referral_revenue_pool.address_revenue_data, address, revenue_data);
-    };
-
-    let coin_type = type_name::get<CoinType>();
-
-    // Increase the revenue amount for the referrer.
-    let revenue_data = table::borrow_mut(&mut referral_revenue_pool.address_revenue_data, address);
     increase_revenue_data(revenue_data, coin_type, balance::value(&balance));
 
     // Init the CoinType for the revenue bag if it does not exist.
