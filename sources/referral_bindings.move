@@ -82,7 +82,7 @@ module scallop_referral_program::referral_bindings {
   }
 
   /// @notice Get the binding of the referee's address.
-  /// @dev This is used on client side to check the binding of the referee's address.
+  /// @dev This is used to check the binding of the referee's address.
   /// @param referral_bindings The referral bindings object.
   /// @param referee_address The referee's address.
   /// @return The veSCA id if any
