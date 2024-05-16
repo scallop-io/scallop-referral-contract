@@ -6,8 +6,8 @@ module scallop_referral_program::scallop_referral_program {
   use std::option;
   use std::type_name::{Self, TypeName};
   use sui::tx_context::{Self, TxContext};
-  use sui::object::ID;
   use sui::clock::{Self, Clock};
+  use sui::object::ID;
   use sui::balance;
   use sui::event;
 
@@ -16,6 +16,7 @@ module scallop_referral_program::scallop_referral_program {
 
   use scallop_referral_program::referral_bindings::{Self, ReferralBindings};
   use scallop_referral_program::referral_revenue_pool::{Self, ReferralRevenuePool};
+  use scallop_referral_program::referral_tiers::{Self, ReferralTiers};
 
 
   const ENotReferralBinding: u64 = 503;
@@ -52,6 +53,7 @@ module scallop_referral_program::scallop_referral_program {
     ve_sca_table: &VeScaTable,
     referral_bindings: &ReferralBindings,
     authorized_witness_list: &AuthorizedWitnessList,
+    referral_tiers: &ReferralTiers,
     clock: &Clock,
     ctx: &mut TxContext
   ): BorrowReferral<CoinType, REFERRAL_WITNESS> {
@@ -66,6 +68,7 @@ module scallop_referral_program::scallop_referral_program {
     let (borrow_fee_discount, referral_share) = calc_borrow_fee_discount_and_referral_share_based_on_ve_sca(
       ve_sca_key_id,
       ve_sca_table,
+      referral_tiers,
       clock
     );
 
@@ -136,26 +139,17 @@ module scallop_referral_program::scallop_referral_program {
   /// @notice Calculate the borrow fee discount & revenue share for referrer
   /// @ve_sca_key_id The object id for referrer's veSCA key
   /// @ve_sca_table The table that contains the veSCA info for all veSCA holders
+  /// @referral_tiers The referral tiers
   /// @clock The system clock object
   /// @return The (BorrowFee discount, Referrer's revenue share)
   public fun calc_borrow_fee_discount_and_referral_share_based_on_ve_sca(
     ve_sca_key_id: ID,
     ve_sca_table: &VeScaTable,
+    referral_tiers: &ReferralTiers,
     clock: &Clock
   ): (u64, u64) {
     let ve_sca_amount = ve_sca::ve_sca_amount(ve_sca_key_id, ve_sca_table, clock);
-    if (ve_sca_amount >= 1_000_000) {
-      return (10, 50)
-    } else if (ve_sca_amount >= 100_000) {
-      return (10, 40)
-    } else if (ve_sca_amount >= 10_000) {
-      return (10, 30)
-    } else if (ve_sca_amount >= 1000) {
-      return (10, 20)
-    } else if (ve_sca_amount >= 100) {
-      return (10, 15)
-    } else {
-      return (10, 10)
-    }
+    let (referral_share, borrow_fee_discount) = referral_tiers::find_tier(referral_tiers, ve_sca_amount);
+    (borrow_fee_discount, referral_share)
   }
 }
