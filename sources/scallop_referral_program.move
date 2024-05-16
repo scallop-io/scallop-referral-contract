@@ -4,15 +4,19 @@
 module scallop_referral_program::scallop_referral_program {
 
   use std::option;
+  use std::type_name::{Self, TypeName};
   use sui::tx_context::{Self, TxContext};
   use sui::object::ID;
   use sui::clock::Clock;
+  use sui::balance;
+  use sui::event;
 
   use protocol::borrow_referral::{Self, AuthorizedWitnessList, BorrowReferral};
   use ve_sca::ve_sca::{Self, VeScaTable};
 
   use scallop_referral_program::referral_bindings::{Self, ReferralBindings};
   use scallop_referral_program::referral_revenue_pool::{Self, ReferralRevenuePool};
+
 
   const ENotReferralBinding: u64 = 503;
 
@@ -22,6 +26,17 @@ module scallop_referral_program::scallop_referral_program {
 
   struct VeScaReferralCfg has store, drop {
     ve_sca_key_id: ID,
+  }
+
+  // ================== Events ==================
+  struct BorrowReferralEvent has copy, drop {
+    coin_type: TypeName,
+    borrower: address,
+    referrer_ve_sca_key_id: ID,
+    borrowed: u64,
+    borrow_fee_discount: u64,
+    referral_share: u64,
+    referral_fee: u64,
   }
 
   // ================== For veSCA referral ==================
@@ -81,15 +96,30 @@ module scallop_referral_program::scallop_referral_program {
     referral_revenue_pool: &mut ReferralRevenuePool,
     ctx: &mut TxContext
   ) {
-    // Get the veSCA information from the referral ticket.
+    // Get the information from the referral ticket.
     let ve_sca_cfg = borrow_referral::get_referral_cfg<CoinType, REFERRAL_WITNESS, VeScaReferralCfg>(&referral_ticket);
     let ve_sca_key_id = ve_sca_cfg.ve_sca_key_id;
+    let coin_type = type_name::get<CoinType>();
+    let borrowed = borrow_referral::borrowed(&referral_ticket);
+    let borrow_fee_discount = borrow_referral::borrow_fee_discount(&referral_ticket);
+    let referral_share = borrow_referral::referral_share(&referral_ticket);
 
     // Destroy the referral ticket, and get the referral revenue.
     let referral_revenue = borrow_referral::destroy_borrow_referral<CoinType, REFERRAL_WITNESS>(
       REFERRAL_WITNESS {},
       referral_ticket,
     );
+
+    // Emit the BorrowReferralEvent.
+    event::emit(BorrowReferralEvent {
+      coin_type,
+      borrower: tx_context::sender(ctx),
+      referrer_ve_sca_key_id: ve_sca_key_id,
+      borrowed,
+      borrow_fee_discount,
+      referral_share,
+      referral_fee: balance::value(&referral_revenue),
+    });
 
     // Add the referral revenue to the referrer.
     referral_revenue_pool::add_revenue_to_ve_sca_referrer(
