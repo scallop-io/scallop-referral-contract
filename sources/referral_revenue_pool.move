@@ -9,8 +9,10 @@ module scallop_referral_program::referral_revenue_pool {
   use sui::table::{Self, Table};
   use sui::bag::{Self, Bag};
   use sui::coin::{Self, Coin};
+  use sui::clock::{Self, Clock};
   use sui::transfer;
   use sui::tx_context::TxContext;
+  use sui::event;
 
   use ve_sca::ve_sca::VeScaKey;
 
@@ -28,6 +30,13 @@ module scallop_referral_program::referral_revenue_pool {
     id: UID,
     revenue: BalanceBag,
     ve_sca_revenue_data: Table<ID, RevenueData>,
+  }
+
+  // ================== Events ==================
+  struct ClaimRevenueEvent has copy, drop {
+    ve_sca_key_id: ID,
+    claimed_amount: u64,
+    timestamp: u64,
   }
 
   /// @notice Initialize the referral revenue pool, make sure only one instance of the pool is created.
@@ -50,6 +59,7 @@ module scallop_referral_program::referral_revenue_pool {
   public fun claim_revenue_with_ve_sca_key<CoinType>(
     referral_revenue_pool: &mut ReferralRevenuePool,
     ve_sca_key: &VeScaKey,
+    clock: &Clock,
     ctx: &mut TxContext
   ): Coin<CoinType> {
     let ve_sca_key_id = object::id(ve_sca_key);
@@ -67,6 +77,13 @@ module scallop_referral_program::referral_revenue_pool {
 
       // Decrease the revenue amount for the referrer.
       decrease_revenue_data(revenue_data, coin_type, revenue_amount);
+
+      // Emit the claim revenue event.
+      event::emit(ClaimRevenueEvent {
+        ve_sca_key_id,
+        claimed_amount: revenue_amount,
+        timestamp: clock::timestamp_ms(clock) / 1000
+      });
 
       // Return the claimed revenue.
       coin::from_balance(revenue_balance, ctx)

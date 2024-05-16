@@ -7,7 +7,7 @@ module scallop_referral_program::scallop_referral_program {
   use std::type_name::{Self, TypeName};
   use sui::tx_context::{Self, TxContext};
   use sui::object::ID;
-  use sui::clock::Clock;
+  use sui::clock::{Self, Clock};
   use sui::balance;
   use sui::event;
 
@@ -37,6 +37,7 @@ module scallop_referral_program::scallop_referral_program {
     borrow_fee_discount: u64,
     referral_share: u64,
     referral_fee: u64,
+    timestamp: u64,
   }
 
   // ================== For veSCA referral ==================
@@ -94,6 +95,7 @@ module scallop_referral_program::scallop_referral_program {
   public fun burn_ve_sca_referral_ticket<CoinType>(
     referral_ticket: BorrowReferral<CoinType, REFERRAL_WITNESS>,
     referral_revenue_pool: &mut ReferralRevenuePool,
+    clock: &Clock,
     ctx: &mut TxContext
   ) {
     // Get the information from the referral ticket.
@@ -119,6 +121,7 @@ module scallop_referral_program::scallop_referral_program {
       borrow_fee_discount,
       referral_share,
       referral_fee: balance::value(&referral_revenue),
+      timestamp: clock::timestamp_ms(clock) / 1000
     });
 
     // Add the referral revenue to the referrer.
