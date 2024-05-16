@@ -18,6 +18,8 @@ module scallop_referral_program::referral_revenue_pool {
 
   use x::balance_bag::{Self, BalanceBag};
 
+  use scallop_referral_program::version::{Self, Version};
+
   friend scallop_referral_program::scallop_referral_program;
 
   struct RevenueData has key, store {
@@ -52,16 +54,21 @@ module scallop_referral_program::referral_revenue_pool {
 
   /// @notice Claim the revenue with veSCA key, always claim all the revenue for the CoinType.
   /// @dev This is meant to be called by the referrer with veSCA
+  /// @param version The version of the contract.
   /// @param referral_revenue_pool The referral revenue pool.
   /// @param ve_sca_key The veSCA key of the referrer.
   /// @param ctx The transaction context.
   /// @return The claimed revenue, if the referrer does not exist, it will return 0 balance coin.
   public fun claim_revenue_with_ve_sca_key<CoinType>(
+    version: &Version,
     referral_revenue_pool: &mut ReferralRevenuePool,
     ve_sca_key: &VeScaKey,
     clock: &Clock,
     ctx: &mut TxContext
   ): Coin<CoinType> {
+    // Make sure the version is correct.
+    version::assert_version(version);
+
     let ve_sca_key_id = object::id(ve_sca_key);
     // If the referrer does not exist, return 0 balance coin.
     if (!table::contains(&referral_revenue_pool.ve_sca_revenue_data, ve_sca_key_id)) {
