@@ -1,6 +1,9 @@
 {
-  "packageId": "0xa3d657e4c6c49ee2327cd6edb7874059ebb83bad52b409fe8cf27219aa1f65d0",
-  "upgradeCap": "0xf2bc9cb6eb8e071597da12897d6a7ec2a488f1fffbc5690fcd296f02ed79d783",
-  "referralBindings": "0x36520abd5cfbd3efb162509caf1589bd00d30dd841fa44a06dc3c312563810a4",
-  "referralRevenuePool": "0x63ca6a2ad6df3dee880abada9fe58c2bbc2f7ef0c9a24bc6016346b36bb64d9c"
+  "packageId": "0x1bf5a8ce77050d8052549d743e16b469f15aa6b81b752b78b6ebb65179665f5a",
+  "upgradeCap": "0x48fbeb336a3c0fbb70204ffd5ad3dde04371fd5efd12b9f234c00329342f8719",
+  "adminCap": "0xc29e33b02cfb9f4eb4b558dc4f7ec6e6551beb3f37b2776bd486bf1efa22a7f4",
+  "referralBindings": "0xcf184487782bed962bf678001efe775d31fb94b9992333a57594cf15d79d5ced",
+  "referralRevenuePool": "0xc24e3e5e37032f29a3dd91a9a1f057af8821b7e6c148e9683900ac8b6d30f0c6",
+  "referralTiers": "0x144350f3db9b46d11b140084cd54e6de0b9c3b8d265ce8059b51d0ef58ea464b",
+  "versionObject": "0x3545849eb97723e676a476ec9d4fe5f2eb0eb2c6b78972851114fd4c7ed4639f"
 }
