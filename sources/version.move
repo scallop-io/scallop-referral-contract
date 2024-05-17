@@ -29,7 +29,7 @@ module scallop_referral_program::version {
     version.value = new_version;
   }
 
-  public fun assert_verion(version: &Version) {
+  public fun assert_version(version: &Version) {
     assert!(version.value == CURRENT_VERSION, ERROR_VERSION_MISMATCH);
   }
 }

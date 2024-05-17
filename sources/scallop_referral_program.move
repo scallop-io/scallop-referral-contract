@@ -61,7 +61,7 @@ module scallop_referral_program::scallop_referral_program {
     ctx: &mut TxContext
   ): BorrowReferral<CoinType, REFERRAL_WITNESS> {
     // Make sure the version is correct.
-    version::assert_verion(version);
+    version::assert_version(version);
 
     let sender = tx_context::sender(ctx);
 
@@ -110,7 +110,7 @@ module scallop_referral_program::scallop_referral_program {
     ctx: &mut TxContext
   ) {
     // Make sure the version is correct.
-    version::assert_verion(version);
+    version::assert_version(version);
 
     // Get the information from the referral ticket.
     let ve_sca_cfg = borrow_referral::get_referral_cfg<CoinType, REFERRAL_WITNESS, VeScaReferralCfg>(&referral_ticket);
