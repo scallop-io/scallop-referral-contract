@@ -3,11 +3,11 @@
 module scallop_referral_program::asc_u64_sorted_list {
 
   use std::vector;
-  use sui::vec_set::{Self, VecSet};
+
+  const NotFoundErr: u64 = 1;
 
   struct AscU64SortedList has copy, store, drop {
     list: vector<u64>,
-    set: VecSet<u64>
   }
 
   public fun to_vector(sorted_list: &AscU64SortedList): vector<u64> { sorted_list.list }
@@ -15,7 +15,7 @@ module scallop_referral_program::asc_u64_sorted_list {
   /// @notice Creates an empty sorted list.
   /// @return An empty sorted list.
   public fun empty(): AscU64SortedList {
-    AscU64SortedList { list: vector::empty(), set: vec_set::empty() }
+    AscU64SortedList { list: vector::empty() }
   }
 
   /// @notice Inserts a value into the sorted list.
@@ -24,23 +24,13 @@ module scallop_referral_program::asc_u64_sorted_list {
   /// @param value The value to insert.
   public fun insert(sorted_list: &mut AscU64SortedList, value: u64) {
     // Make sure the value is not in the set before inserting it into the list.
-    if (vec_set::contains(&sorted_list.set, &value)) {
+    let upper_bound_index = upper_bound(&sorted_list.list, value);
+    // don't insert if duplicated
+    if (upper_bound_index > 0 && *vector::borrow(&sorted_list.list, upper_bound_index - 1) == value) {
       return
-    } else {
-      vec_set::insert(&mut sorted_list.set, value);
     };
-    // Find the position to insert the value.
-    let i = 0;
-    let list_len = vector::length(&sorted_list.list);
-    while (i < list_len) {
-      let elment = *vector::borrow(&sorted_list.list, i);
-      if (value < elment) {
-        break
-      };
-      i = i + 1;
-    };
-    // Insert the value into the list.
-    vector::insert(&mut sorted_list.list, value, i);
+
+    vector::insert(&mut sorted_list.list, value, upper_bound_index);
   }
 
   /// @notice Removes a value from the sorted list.
@@ -48,47 +38,100 @@ module scallop_referral_program::asc_u64_sorted_list {
   /// @param sorted_list The sorted list to remove the value from.
   /// @param value The value to remove.
   public fun remove(sorted_list: &mut AscU64SortedList, value: u64) {
-    // Make sure the value is in the set before removing it from the list.
-    if (!vec_set::contains(&sorted_list.set, &value)) {
-      return
-    } else {
-      vec_set::remove(&mut sorted_list.set, &value)
-    };
-    // Find the position to remove the value.
-    let i = 0;
-    let list_len = vector::length(&sorted_list.list);
-    while (i < list_len) {
-      let elment = *vector::borrow(&sorted_list.list, i);
-      if (value == elment) {
-        break
-      };
-      i = i + 1;
-    };
-    // Remove the value from the list.
-    if (i < list_len) {
-      vector::remove(&mut sorted_list.list, i);
+    // Make sure the value is not in the set before inserting it into the list.
+    let upper_bound_index = upper_bound(&sorted_list.list, value);
+    // don't insert if duplicated
+    if (upper_bound_index > 0 && *vector::borrow(&sorted_list.list, upper_bound_index - 1) == value) {
+      vector::remove(&mut sorted_list.list, upper_bound_index - 1);
     };
   }
 
-  /// @notice Find the nearest smaller or value in the sorted list compared to the target value.
-  /// @dev If the target value is smaller than the smallest value in the sorted list, return 0.
-  /// @param sorted_list The sorted list to search.
-  /// @param target_value The target value to search for.
-  /// @return The nearest smaller or equal value in the sorted list compared to the target value.
-  public fun find_nearest_smaller_or_equal_value(sorted_list: &AscU64SortedList, target_value: u64): u64 {
-    let i = 0;
-    let list_len = vector::length(&sorted_list.list);
-    while (i < list_len) {
-      let elment = *vector::borrow(&sorted_list.list, i);
-      if (target_value < elment) {
-        break
+  public fun find_nearest_smaller_or_equal_value(sorted_list: &AscU64SortedList, value: u64): u64 {
+    let upper_bound_index = upper_bound(&sorted_list.list, value);
+    assert!(upper_bound_index == 0, NotFoundErr);
+    upper_bound_index - 1
+  }
+
+  /// @notice find a lower bound of a value in a list
+  /// @dev the list need to be sorted
+  /// @param sorted_list The sorted list.
+  /// @param target The value in search.
+  /// @return an index of the upper_bound
+  public fun upper_bound(sorted_list: &vector<u64>, target: u64): u64 {
+    let low = (0 as u64);
+    let high = (vector::length(sorted_list) as u64);
+
+    // binary search
+    while (low < high) {
+      let mid = low + (high - low) / 2;
+      if (target >= *vector::borrow(sorted_list, mid)) {
+        low = mid + 1;
+      } else {
+        high = mid;
       };
-      i = i + 1;
     };
-    if (i == 0) {
-      0
-    } else {
-      *vector::borrow(&sorted_list.list, i - 1)
-    }
+
+    if (low < vector::length(sorted_list) && *vector::borrow(sorted_list, low) <= target) {
+      low = low + 1;
+    };
+
+    low
+  }
+
+  #[test]
+  fun upper_bound_test() {
+    let vect = vector<u64>[1, 1, 5, 5, 10, 100];
+    assert!(upper_bound(&vect, 1000) == 6, 1);
+    assert!(upper_bound(&vect, 101) == 6, 1);
+    assert!(upper_bound(&vect, 100) == 6, 1);
+    assert!(upper_bound(&vect, 11) == 5, 1);
+    assert!(upper_bound(&vect, 10) == 5, 1);
+    assert!(upper_bound(&vect, 6) == 4, 1);
+    assert!(upper_bound(&vect, 5) == 4, 1);
+    assert!(upper_bound(&vect, 3) == 2, 1);
+    assert!(upper_bound(&vect, 2) == 2, 1);
+    assert!(upper_bound(&vect, 1) == 2, 1);
+    assert!(upper_bound(&vect, 0) == 0, 1);
+  }
+
+  #[test]
+  fun insert_test() {
+    let sorted_list = empty();
+    insert(&mut sorted_list, 1);
+    assert!(sorted_list.list == vector<u64> [1], 1);
+    
+    insert(&mut sorted_list, 1); // duplicate should be ignored
+    assert!(sorted_list.list == vector<u64> [1], 1);
+
+    insert(&mut sorted_list, 0); // insert before the smallest value
+    assert!(sorted_list.list == vector<u64> [0, 1], 1);
+
+    insert(&mut sorted_list, 10); // insert after the largest value
+    assert!(sorted_list.list == vector<u64> [0, 1, 10], 1);
+
+    insert(&mut sorted_list, 5);
+    assert!(sorted_list.list == vector<u64> [0, 1, 5, 10], 1);
+
+    insert(&mut sorted_list, 5); // duplicate should be ignored
+    assert!(sorted_list.list == vector<u64> [0, 1, 5, 10], 1);
+  }
+
+  #[test]
+  fun remove_test() {
+    let sorted_list = empty();
+    insert(&mut sorted_list, 1);
+    insert(&mut sorted_list, 0);
+    insert(&mut sorted_list, 5);
+    insert(&mut sorted_list, 10);
+    assert!(sorted_list.list == vector<u64> [0, 1, 5, 10], 1);
+
+    remove(&mut sorted_list, 1);
+    assert!(sorted_list.list == vector<u64> [0, 5, 10], 1);
+    remove(&mut sorted_list, 10);
+    assert!(sorted_list.list == vector<u64> [0, 5], 1);
+    remove(&mut sorted_list, 0);
+    assert!(sorted_list.list == vector<u64> [5], 1);
+    remove(&mut sorted_list, 5);
+    assert!(sorted_list.list == vector<u64> [], 1);
   }
 }
