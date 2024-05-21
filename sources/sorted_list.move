@@ -23,7 +23,6 @@ module scallop_referral_program::asc_u64_sorted_list {
   /// @param sorted_list The sorted list to insert the value into.
   /// @param value The value to insert.
   public fun insert(sorted_list: &mut AscU64SortedList, value: u64) {
-    // Make sure the value is not in the set before inserting it into the list.
     let upper_bound_index = upper_bound(&sorted_list.list, value);
     // don't insert if duplicated
     if (upper_bound_index > 0 && *vector::borrow(&sorted_list.list, upper_bound_index - 1) == value) {
@@ -38,9 +37,8 @@ module scallop_referral_program::asc_u64_sorted_list {
   /// @param sorted_list The sorted list to remove the value from.
   /// @param value The value to remove.
   public fun remove(sorted_list: &mut AscU64SortedList, value: u64) {
-    // Make sure the value is not in the set before inserting it into the list.
     let upper_bound_index = upper_bound(&sorted_list.list, value);
-    // don't insert if duplicated
+    // only remove if the value is equal
     if (upper_bound_index > 0 && *vector::borrow(&sorted_list.list, upper_bound_index - 1) == value) {
       vector::remove(&mut sorted_list.list, upper_bound_index - 1);
     };
@@ -52,7 +50,7 @@ module scallop_referral_program::asc_u64_sorted_list {
     upper_bound_index - 1
   }
 
-  /// @notice find a lower bound of a value in a list
+  /// @notice find an upper bound of a value in a list
   /// @dev the list need to be sorted
   /// @param sorted_list The sorted list.
   /// @param target The value in search.
