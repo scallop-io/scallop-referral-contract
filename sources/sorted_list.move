@@ -10,6 +10,8 @@ module scallop_referral_program::asc_u64_sorted_list {
     set: VecSet<u64>
   }
 
+  public fun to_vector(sorted_list: &AscU64SortedList): vector<u64> { sorted_list.list }
+
   /// @notice Creates an empty sorted list.
   /// @return An empty sorted list.
   public fun empty(): AscU64SortedList {

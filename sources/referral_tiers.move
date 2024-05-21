@@ -93,4 +93,25 @@ module scallop_referral_program::referral_tiers {
     let tier_data = table::borrow(&referral_tiers.tier_table, ve_sca_tier);
     (tier_data.referral_share, tier_data.borrow_fee_discount)
   }
+
+  // ============== Test Only Functions ==============
+  #[test_only]
+  public fun create_for_test(ctx: &mut TxContext): ReferralTiers {
+    let referral_tiers = ReferralTiers {
+      id: object::new(ctx),
+      tier_table: table::new(ctx),
+      ve_sca_tiers: asc_u64_sorted_list::empty(),
+    };
+    referral_tiers
+  }
+
+  #[test_only]
+  public fun add_tier_for_test(
+    referral_tiers: &mut ReferralTiers,
+    ve_sca_amount: u64,
+    referral_share: u64,
+    borrow_fee_discount: u64,
+  ) {
+    add_tier(referral_tiers, ve_sca_amount, referral_share, borrow_fee_discount);
+  }
 }
