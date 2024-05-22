@@ -46,8 +46,8 @@ module scallop_referral_program::asc_u64_sorted_list {
 
   public fun find_nearest_smaller_or_equal_value(sorted_list: &AscU64SortedList, value: u64): u64 {
     let upper_bound_index = upper_bound(&sorted_list.list, value);
-    assert!(upper_bound_index == 0, NotFoundErr);
-    upper_bound_index - 1
+    assert!(upper_bound_index > 0, NotFoundErr);
+    *vector::borrow(&sorted_list.list, upper_bound_index - 1)
   }
 
   /// @notice find an upper bound of a value in a list
