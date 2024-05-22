@@ -1,7 +1,6 @@
 [package]
 name = "ScallopReferralProgram"
 version = "0.0.1"
-published-at = "0xa3d657e4c6c49ee2327cd6edb7874059ebb83bad52b409fe8cf27219aa1f65d0"
 
 [dependencies.Sui]
 git = "https://github.com/MystenLabs/sui.git"
