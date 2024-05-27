@@ -41,6 +41,13 @@ module scallop_referral_program::referral_revenue_pool {
     timestamp: u64,
   }
 
+  struct ClaimRevenueEventV2 has copy, drop {
+    ve_sca_key_id: ID,
+    coin_type: TypeName,
+    claimed_amount: u64,
+    timestamp: u64,
+  }
+
   /// @notice Initialize the referral revenue pool, make sure only one instance of the pool is created.
   /// @param ctx The transaction context.
   fun init(ctx: &mut TxContext) {
@@ -86,8 +93,9 @@ module scallop_referral_program::referral_revenue_pool {
       decrease_revenue_data(revenue_data, coin_type, revenue_amount);
 
       // Emit the claim revenue event.
-      event::emit(ClaimRevenueEvent {
+      event::emit(ClaimRevenueEventV2 {
         ve_sca_key_id,
+        coin_type,
         claimed_amount: revenue_amount,
         timestamp: clock::timestamp_ms(clock) / 1000
       });
