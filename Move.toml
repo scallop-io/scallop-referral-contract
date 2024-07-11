@@ -1,7 +1,7 @@
 [package]
 name = "ScallopReferralProgram"
 version = "0.0.1"
-published-at = "0xa3654ebb63eb06c0f4ff52f8aa6512df9f164f7772bdf15dac3709bd3798dda9"
+published-at = "0x732b314bd2e632b1e294d50c777bb6f076055979affbcf046ab4a8d0d8b43bfc"
 
 [dependencies.Sui]
 git = "https://github.com/MystenLabs/sui.git"
@@ -16,4 +16,4 @@ local = "../ve-sca"
 local = "../sui-lending-protocol/contracts/protocol"
 
 [addresses]
-scallop_referral_program = "0x5658d4bf5ddcba27e4337b4262108b3ad1716643cac8c2054ac341538adc72ec"
+scallop_referral_program = "0x0"

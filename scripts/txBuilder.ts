@@ -15,4 +15,11 @@ export class ScallopReferralTxBuilder {
       [Contract.adminCap, Contract.referralTiers, veSCA],
     )
   }
+
+  static setContractVersion(tx: SuiTxBlock, newVersion: number) {
+    tx.moveCall(
+      `${Contract.packageId}::admin::set_contract_version`,
+      [Contract.adminCap, Contract.versionObject,newVersion]
+    )
+  }
 }
