@@ -8,8 +8,8 @@ async function migrateToMultiSig() {
 
   const tx = new SuiTxBlock();
 
-  const object = '0xc5dc06b9074291259f2cac460c940012c781c4430e42125c541cc43101c3bcbd';
-  tx.transferObjects([object], tx.pure(MULTI_SIG_ADDRESS));
+  const adminCap = '';
+  tx.transferObjects([adminCap], MULTI_SIG_ADDRESS);
 
   return adminSuiKit.signAndSendTxn(tx);
 }

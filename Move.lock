@@ -2,7 +2,7 @@
 
 [move]
 version = 2
-manifest_digest = "58B7911B83F55CE8D0821FD1161347BB15BB24878EF80BDEEE1C14A90107DBD1"
+manifest_digest = "D854816FAC80641903B90904B97F808C5A3F0854D7695B34946373E8083C4728"
 deps_digest = "060AD7E57DFB13104F21BE5F5C3759D03F0553FC3229247D9A7A6B45F50D03A3"
 dependencies = [
   { name = "ScallopProtocol" },
@@ -111,5 +111,5 @@ flavor = "sui"
 [env.mainnet]
 chain-id = "35834a8a"
 original-published-id = "0x0000000000000000000000000000000000000000000000000000000000000000"
-latest-published-id = "0x1cd85ea1d3a9320a45312fab5649c97121f9d7f441a1ffcd026506c853442249"
-published-version = "6"
+latest-published-id = "0x54334af0681d89ce4d2396f4367015d8ee3a7ce5634f2a0c77c0fb0f36b23dc0"
+published-version = "7"
