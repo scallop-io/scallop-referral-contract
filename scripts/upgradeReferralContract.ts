@@ -20,6 +20,7 @@ const pythRulePath = path.join(__dirname, `${lendingContractsPath}/sui_x_oracle/
  */
 const mathPkgPath = path.join(__dirname, `${lendingContractsPath}/libs/math`);
 const xPkgPath = path.join(__dirname, `${lendingContractsPath}/libs/x`);
+const decimalPkgPath = path.join(__dirname, `${lendingContractsPath}/libs/x`);
 const whitelistPkgPath = path.join(__dirname, `${lendingContractsPath}/libs/whitelist`);
 const coinDecimalsRegistryPath = path.join(__dirname, `${lendingContractsPath}/libs/coin_decimals_registry`);
 
@@ -38,6 +39,7 @@ const borrowReferralPackageList: PackageBatch = [
     // Protocol related dependencies
     { packagePath: mathPkgPath },
     { packagePath: xPkgPath },
+    { packagePath: decimalPkgPath },
     { packagePath: whitelistPkgPath },
     { packagePath: coinDecimalsRegistryPath },
     { packagePath: protocolPkgPath },
