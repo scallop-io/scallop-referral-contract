@@ -1,6 +1,7 @@
 import { SuiTxBlock } from '@scallop-io/sui-kit';
 import { adminSuiKit } from './suiElements';
 import { ScallopReferralTxBuilder } from './txBuilder';
+import { buildMultiSigTx } from './multiSig';
 
 updateReferralTiers().then(console.log);
 async function updateReferralTiers() {
@@ -30,5 +31,5 @@ async function updateReferralTiers() {
     ScallopReferralTxBuilder.add_referral_tier(tx, tier.veSCA, tier.referralShare, tier.borrow_fee_discount);
   }
 
-  return adminSuiKit.signAndSendTxn(tx);
+  return buildMultiSigTx(tx);
 }

@@ -1,5 +1,4 @@
 import { SuiTxBlock } from '@scallop-io/sui-kit';
-import { adminSuiKit } from './suiElements';
 import { ScallopReferralTxBuilder } from './txBuilder';
 import { buildMultiSigTx } from './multiSig';
 
