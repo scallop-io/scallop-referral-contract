@@ -5,7 +5,7 @@ export const MULTI_SIG_ADDRESS = '0x4f8744837e95c79258a23ea6dc1985dcbbd39935a49b
 
 export async function buildMultiSigTx(tx: SuiTxBlock) {
   tx.setSender(MULTI_SIG_ADDRESS);
-  const bytes = await tx.build({ client: adminSuiKit.client });
+  const bytes = await tx.build({ client: adminSuiKit.client() });
   const b64 = toB64(bytes);
   return b64;
 }

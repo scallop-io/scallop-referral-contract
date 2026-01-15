@@ -1,7 +1,6 @@
 import { SuiTxBlock } from '@scallop-io/sui-kit';
-import { adminSuiKit } from './suiElements';
 import { ScallopReferralTxBuilder } from './txBuilder';
-import { buildMultiSigTx } from './multiSig';
+import { adminSuiKit } from './suiElements';
 
 updateReferralTiers().then(console.log);
 async function updateReferralTiers() {
@@ -16,11 +15,11 @@ async function updateReferralTiers() {
 
   const newTiers = [
     { veSCA: 0, referralShare: 5, borrow_fee_discount: 5 },
-    { veSCA: 100e9, referralShare: 7, borrow_fee_discount: 6 },
-    { veSCA: 1000e9, referralShare: 10, borrow_fee_discount: 8 },
-    { veSCA: 10000e9, referralShare: 15, borrow_fee_discount: 11 },
-    { veSCA: 100000e9, referralShare: 25, borrow_fee_discount: 15 },
-    { veSCA: 1000000e9, referralShare: 40, borrow_fee_discount: 20 },
+    { veSCA: 100e9, referralShare: 6, borrow_fee_discount: 7 },
+    { veSCA: 1000e9, referralShare: 9, borrow_fee_discount: 12 },
+    { veSCA: 10000e9, referralShare: 18, borrow_fee_discount: 25 },
+    { veSCA: 100000e9, referralShare: 32, borrow_fee_discount: 50 },
+    { veSCA: 1000000e9, referralShare: 40, borrow_fee_discount: 60 },
   ];
 
   const tx = new SuiTxBlock();
@@ -31,5 +30,5 @@ async function updateReferralTiers() {
     ScallopReferralTxBuilder.add_referral_tier(tx, tier.veSCA, tier.referralShare, tier.borrow_fee_discount);
   }
 
-  return buildMultiSigTx(tx);
+  return adminSuiKit.signAndSendTxn(tx);
 }
