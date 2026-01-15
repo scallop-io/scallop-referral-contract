@@ -1,6 +1,6 @@
 /// @title This module manages the the mapping of referrers and referees
 /// @author Scallop Labs
-/// @notice Once an user address is binded to a referrer, it cannot be unbind.
+/// @notice User addresses can be bound to and unbound from referrers.
 module scallop_referral_program::referral_bindings {
   use std::option::{Self, Option};
   use sui::tx_context::{Self, TxContext};
@@ -12,6 +12,7 @@ module scallop_referral_program::referral_bindings {
   use ve_sca::ve_sca::{Self, VeScaTable};
 
   const ERefereeAlreadyBinded: u64 = 405;
+  const ERefereeNotBinded: u64 = 406;
 
   // This stores the bindings between the referrer and the referee's address.
   // The referee's address is binded to a specific veSCA key id
@@ -49,6 +50,22 @@ module scallop_referral_program::referral_bindings {
 
     // Insert the binding.
     table::add(&mut referral_bindings.ve_sca_binding, sender, ve_sca_key_id);
+  }
+
+  /// @notice This function unbinds the referee's address from their current referrer, abort if the referee's address has not been binded.
+  /// @dev This function is meant to be called by the referee to remove their referral binding.
+  /// @param referral_bindings The referral bindings object.
+  /// @param ctx The transaction context.
+  public fun unbind_ve_sca_referrer(
+    referral_bindings: &mut ReferralBindings,
+    ctx: &mut TxContext
+  ) {
+    let sender = tx_context::sender(ctx);
+    // Make sure the referee's address has been binded.
+    assert!(has_ve_sca_binding(referral_bindings, sender), ERefereeNotBinded);
+
+    // Remove the binding.
+    table::remove(&mut referral_bindings.ve_sca_binding, sender);
   }
 
   /// @notice Check if the referee's address has been binded to a referrer.

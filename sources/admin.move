@@ -10,7 +10,7 @@ module scallop_referral_program::admin {
   use scallop_referral_program::referral_tiers::{Self, ReferralTiers};
   use scallop_referral_program::version::{Self, Version};
 
-  struct AdminCap has key {
+  struct AdminCap has key, store {
     id: UID
   }
 
