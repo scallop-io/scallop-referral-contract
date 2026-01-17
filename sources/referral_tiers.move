@@ -114,4 +114,12 @@ module scallop_referral_program::referral_tiers {
   ) {
     add_tier(referral_tiers, ve_sca_amount, referral_share, borrow_fee_discount);
   }
+
+  #[test_only]
+  public fun remove_tier_for_test(
+    referral_tiers: &mut ReferralTiers,
+    ve_sca_amount: u64
+  ): (u64, u64) {
+    remove_tier(referral_tiers, ve_sca_amount)
+  }
 }
