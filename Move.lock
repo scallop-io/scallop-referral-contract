@@ -2,7 +2,7 @@
 
 [move]
 version = 3
-manifest_digest = "6C801365F33334FAC82FDA7C381F1FA492D98E5B753E19377FEF292964D79EB5"
+manifest_digest = "F9B525D306CB239EB4CBC632891782C04C9C642E98D4990C3E5E515651FAE91B"
 deps_digest = "060AD7E57DFB13104F21BE5F5C3759D03F0553FC3229247D9A7A6B45F50D03A3"
 dependencies = [
   { id = "ScallopProtocol", name = "ScallopProtocol" },
@@ -44,7 +44,6 @@ source = { git = "https://github.com/scallop-io/sca.git", rev = "main", subdir =
 
 dependencies = [
   { id = "Sui", name = "Sui" },
-  { id = "XSupply", name = "XSupply" },
 ]
 
 [[move.package]]
@@ -109,14 +108,6 @@ dependencies = [
 [[move.package]]
 id = "XOracle"
 source = { git = "https://github.com/scallop-io/sui-lending-protocol.git", rev = "mainnet-v1.7", subdir = "contracts/sui_x_oracle/x_oracle" }
-
-dependencies = [
-  { id = "Sui", name = "Sui" },
-]
-
-[[move.package]]
-id = "XSupply"
-source = { git = "https://github.com/scallop-io/sca.git", rev = "main", subdir = "x_supply" }
 
 dependencies = [
   { id = "Sui", name = "Sui" },
