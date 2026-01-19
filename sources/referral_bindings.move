@@ -115,4 +115,25 @@ module scallop_referral_program::referral_bindings {
     };
     binded_ve_sca
   }
+
+  // ============== Test Only Functions ==============
+
+  #[test_only]
+  public fun create_for_test(ctx: &mut TxContext): ReferralBindings {
+    ReferralBindings {
+      id: object::new(ctx),
+      ve_sca_binding: table::new(ctx),
+    }
+  }
+
+  #[test_only]
+  public fun bind_for_test(
+    referral_bindings: &mut ReferralBindings,
+    ve_sca_key_id: ID,
+    ctx: &mut TxContext
+  ) {
+    let sender = tx_context::sender(ctx);
+    assert!(has_ve_sca_binding(referral_bindings, sender) == false, ERefereeAlreadyBinded);
+    table::add(&mut referral_bindings.ve_sca_binding, sender, ve_sca_key_id);
+  }
 }
