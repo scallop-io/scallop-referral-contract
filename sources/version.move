@@ -6,7 +6,7 @@ module scallop_referral_program::version {
 
   friend scallop_referral_program::admin;
 
-  const CURRENT_VERSION: u64 = 4;
+  const CURRENT_VERSION: u64 = 5;
 
   const ERROR_VERSION_CAN_ONLY_INCREASE: u64 = 701;
   const ERROR_VERSION_MISMATCH: u64 = 702;
