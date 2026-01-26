@@ -66,4 +66,4 @@ export const upgradeBorrowReferral = async (
     return upgradeTx?.txBytesBase64
 }
 
-upgradeBorrowReferral(adminSuiKit.client).then(console.log).catch(console.error).finally(() => process.exit(0));
+upgradeBorrowReferral(adminSuiKit.client()).then(console.log).catch(console.error).finally(() => process.exit(0));

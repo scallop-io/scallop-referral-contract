@@ -15,8 +15,8 @@ async function addReferralTiers() {
 
   const tx = new SuiTxBlock();
   for (const tier of tiers) {
-    ScallopReferralTxBuilder.remove_referral_tier(tx, tier.veSCA);
-    ScallopReferralTxBuilder.add_referral_tier(tx, tier.veSCA, tier.referralShare, tier.borrow_fee_discount);
+    ScallopReferralTxBuilder.removeReferralTierV2(tx, tier.veSCA);
+    ScallopReferralTxBuilder.addReferralTierV2(tx, tier.veSCA, tier.referralShare, tier.borrow_fee_discount);
   }
 
   return adminSuiKit.signAndSendTxn(tx);

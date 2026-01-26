@@ -2,24 +2,32 @@ import { SuiTxBlock } from '@scallop-io/sui-kit';
 import Contract from '../publish-result.production.json';
 
 export class ScallopReferralTxBuilder {
-  static add_referral_tier(tx: SuiTxBlock, veSCA: number, referralShare: number, borrow_fee_discount: number) {
+  static addReferralTierV2(tx: SuiTxBlock, veSCA: number, referralShare: number, borrow_fee_discount: number) {
     tx.moveCall(
-      `${Contract.packageId}::admin::add_referral_tier`,
-      [Contract.adminCap, Contract.referralTiers, veSCA, referralShare, borrow_fee_discount],
+      `${Contract.packageId}::admin::add_referral_tier_v2`,
+      [Contract.adminCapV2, Contract.referralTiers, veSCA, referralShare, borrow_fee_discount],
     )
   }
 
-  static remove_referral_tier(tx: SuiTxBlock, veSCA: number) {
+  static removeReferralTierV2(tx: SuiTxBlock, veSCA: number) {
     tx.moveCall(
-      `${Contract.packageId}::admin::remove_referral_tier`,
-      [Contract.adminCap, Contract.referralTiers, veSCA],
+      `${Contract.packageId}::admin::remove_referral_tier_v2`,
+      [Contract.adminCapV2, Contract.referralTiers, veSCA],
     )
   }
 
-  static setContractVersion(tx: SuiTxBlock, newVersion: number) {
+  static setContractVersionV2(tx: SuiTxBlock, newVersion: number) {
     tx.moveCall(
-      `${Contract.packageId}::admin::set_contract_version`,
-      [Contract.adminCap, Contract.versionObject,newVersion]
+      `${Contract.packageId}::admin::set_contract_version_v2`,
+      [Contract.adminCapV2, Contract.versionObject,newVersion]
     )
+  }
+
+  static upgradeAdminCap(tx: SuiTxBlock) {
+    const adminCapV2 = tx.moveCall(
+      `${Contract.packageId}::admin::upgrade_admin_cap`,
+      [Contract.adminCap],
+    );
+    return adminCapV2
   }
 }

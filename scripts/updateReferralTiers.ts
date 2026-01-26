@@ -24,10 +24,10 @@ async function updateReferralTiers() {
 
   const tx = new SuiTxBlock();
   for (const tier of oldTiers) {
-    ScallopReferralTxBuilder.remove_referral_tier(tx, tier.veSCA);
+    ScallopReferralTxBuilder.removeReferralTierV2(tx, tier.veSCA);
   }
   for (const tier of newTiers) {
-    ScallopReferralTxBuilder.add_referral_tier(tx, tier.veSCA, tier.referralShare, tier.borrow_fee_discount);
+    ScallopReferralTxBuilder.addReferralTierV2(tx, tier.veSCA, tier.referralShare, tier.borrow_fee_discount);
   }
 
   return adminSuiKit.signAndSendTxn(tx);

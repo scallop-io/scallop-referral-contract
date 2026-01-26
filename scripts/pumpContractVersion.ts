@@ -4,10 +4,10 @@ import { buildMultiSigTx } from './multiSig';
 
 pumpContractVersion().then(console.log);
 async function pumpContractVersion() {
-  const newVersion = 4;
+  const newVersion = 5;
 
   const tx = new SuiTxBlock();
-  ScallopReferralTxBuilder.setContractVersion(tx, newVersion);
+  ScallopReferralTxBuilder.setContractVersionV2(tx, newVersion);
 
   return buildMultiSigTx(tx);
 }
