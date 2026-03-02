@@ -15,7 +15,7 @@
   "dependencies": {
     "@mysten/sui": "1.28.2",
     "@scallop-io/sui-kit": "^1.4.0",
-    "@scallop-io/sui-package-kit": "../sui-package-kit",
+    "@scallop-io/sui-package-kit": "^1.21.3",
     "@types/node": "^20.12.12",
     "dotenv": "^16.4.5"
   }

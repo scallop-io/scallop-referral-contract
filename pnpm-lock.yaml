@@ -2,14 +2,14 @@ lockfileVersion: '6.0'
 
 dependencies:
   '@mysten/sui':
-    specifier: 1.3.1
-    version: 1.3.1(typescript@5.4.5)
+    specifier: 1.28.2
+    version: 1.28.2(typescript@5.4.5)
   '@scallop-io/sui-kit':
-    specifier: 1.3.1
-    version: 1.3.1(typescript@5.4.5)
+    specifier: ^1.4.0
+    version: 1.4.0(typescript@5.4.5)
   '@scallop-io/sui-package-kit':
-    specifier: ../sui-package-kit
-    version: link:../sui-package-kit
+    specifier: ^1.21.3
+    version: 1.21.3(typescript@5.4.5)
   '@types/node':
     specifier: ^20.12.12
     version: 20.12.12
@@ -85,10 +85,14 @@ packages:
       graphql: 16.11.0
     dev: false
 
-  /@mysten/bcs@1.0.3:
-    resolution: {integrity: sha512-fc2xDj8eteP18zCNr6WStlE0Hxi7kYeY9yAzAN8oyz5EYOLas0JwScR9pAd9VR61BfIThJ+5vxQ6K7Y22lHDVQ==}
+  /@iarna/toml@2.2.5:
+    resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
+    dev: false
+
+  /@mysten/bcs@1.6.0:
+    resolution: {integrity: sha512-ydDRYdIkIFCpHCcPvAkMC91fVwumjzbTgjqds0KsphDQI3jUlH3jFG5lfYNTmV6V3pkhOiRk1fupLBcsQsiszg==}
     dependencies:
-      bs58: 6.0.0
+      '@scure/base': 1.2.5
     dev: false
 
   /@mysten/bcs@1.6.1:
@@ -98,21 +102,21 @@ packages:
       '@scure/base': 1.2.5
     dev: false
 
-  /@mysten/sui@1.3.1(typescript@5.4.5):
-    resolution: {integrity: sha512-TxTYFO9ou/LOk3LQYZIJrZQJ/8UHEqYpT67MbCHYLCxGiPqAnvpIgnVBzJkpYFA/7vR0pQ1e3KELvQrYHnz2Ag==}
+  /@mysten/sui@1.28.2(typescript@5.4.5):
+    resolution: {integrity: sha512-d+lSp3rAtuOX0taIiIv0KNILDsbmAB9koNGHBinfREraGnE9tUFW315UByuyvuZ9K53ji4i2risdtwxCQ1a8Zw==}
     engines: {node: '>=18'}
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.11.0)
-      '@mysten/bcs': 1.0.3
+      '@mysten/bcs': 1.6.0
+      '@mysten/utils': 0.0.0
       '@noble/curves': 1.9.0
-      '@noble/hashes': 1.4.0
-      '@scure/bip32': 1.4.0
-      '@scure/bip39': 1.3.0
-      '@suchipi/femver': 1.0.0
-      bech32: 2.0.0
+      '@noble/hashes': 1.8.0
+      '@scure/base': 1.2.5
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
       gql.tada: 1.8.10(graphql@16.11.0)(typescript@5.4.5)
       graphql: 16.11.0
-      tweetnacl: 1.0.3
+      poseidon-lite: 0.2.1
       valibot: 0.36.0
     transitivePeerDependencies:
       - '@gql.tada/svelte-support'
@@ -126,12 +130,6 @@ packages:
       '@scure/base': 1.2.5
     dev: false
 
-  /@noble/curves@1.4.0:
-    resolution: {integrity: sha512-p+4cb332SFCrReJkCYe8Xzm0OWi4Jji5jVdIZRL/PmacmDkFNw6MrrV+gGpiPxLHbV+zKFRywUWbaseT+tZRXg==}
-    dependencies:
-      '@noble/hashes': 1.4.0
-    dev: false
-
   /@noble/curves@1.9.0:
     resolution: {integrity: sha512-7YDlXiNMdO1YZeH6t/kvopHHbIZzlxrCV9WLqCY6QhcXOoXiNCMDqJIglZ9Yjx5+w7Dz30TITFrlTjnRg7sKEg==}
     engines: {node: ^14.21.3 || >=16}
@@ -139,61 +137,59 @@ packages:
       '@noble/hashes': 1.8.0
     dev: false
 
-  /@noble/hashes@1.4.0:
-    resolution: {integrity: sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==}
-    engines: {node: '>= 16'}
-    dev: false
-
   /@noble/hashes@1.8.0:
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
     engines: {node: ^14.21.3 || >=16}
     dev: false
 
-  /@scallop-io/sui-kit@1.3.1(typescript@5.4.5):
-    resolution: {integrity: sha512-Ydl3dVOvDnHshtO1Qg/w8C+xPHTVzo9FdYulBY3IYF9RbWYLCOusp9yrckJyXrBiKa4asOYhujKSDHXqHNfSNw==}
+  /@scallop-io/sui-kit@1.4.0(typescript@5.4.5):
+    resolution: {integrity: sha512-e0Pf6iFPWFuuEUeiMdsN7yShJ9TqMGAENMlVy9Dds6KameRTIFTFdCw8jChAplVKI9PP1YEOQZKiCVv6PF0PSA==}
     engines: {node: '>=16'}
     dependencies:
       '@mysten/bcs': 1.6.1
-      '@mysten/sui': 1.3.1(typescript@5.4.5)
-      '@noble/curves': 1.9.0
-      '@noble/hashes': 1.4.0
-      '@scure/bip39': 1.3.0
+      '@mysten/sui': 1.28.2(typescript@5.4.5)
+      '@scure/bip39': 1.6.0
       assert: 2.1.0
       bech32: 2.0.0
-      superstruct: 1.0.4
-      ts-retry-promise: 0.7.1
-      tweetnacl: 1.0.3
     transitivePeerDependencies:
       - '@gql.tada/svelte-support'
       - '@gql.tada/vue-support'
       - typescript
     dev: false
 
-  /@scure/base@1.1.6:
-    resolution: {integrity: sha512-ok9AWwhcgYuGG3Zfhyqg+zwl+Wn5uE+dwC0NV/2qQkx4dABbb/bx96vWu8NSj+BNjjSjno+JRYRjle1jV08k3g==}
+  /@scallop-io/sui-package-kit@1.21.3(typescript@5.4.5):
+    resolution: {integrity: sha512-REOlDN6+xLiNol+88HZFWqX38V2TO3qj9fB0wmWdwGiz4OurOAssBxmNcFqi0XMec9+BXITNNuoJ7uIrAw1TUQ==}
+    engines: {node: '>=16'}
+    dependencies:
+      '@iarna/toml': 2.2.5
+      '@mysten/bcs': 1.6.1
+      '@mysten/sui': 1.28.2(typescript@5.4.5)
+      colorts: 0.1.63
+      superstruct: 1.0.4
+      tmp: 0.2.5
+    transitivePeerDependencies:
+      - '@gql.tada/svelte-support'
+      - '@gql.tada/vue-support'
+      - typescript
     dev: false
 
   /@scure/base@1.2.5:
     resolution: {integrity: sha512-9rE6EOVeIQzt5TSu4v+K523F8u6DhBsoZWPGKlnCshhlDhy0kJzUX4V+tr2dWmzF1GdekvThABoEQBGBQI7xZw==}
     dev: false
 
-  /@scure/bip32@1.4.0:
-    resolution: {integrity: sha512-sVUpc0Vq3tXCkDGYVWGIZTRfnvu8LoTDaev7vbwh0omSvVORONr960MQWdKqJDCReIEmTj3PAr73O3aoxz7OPg==}
+  /@scure/bip32@1.7.0:
+    resolution: {integrity: sha512-E4FFX/N3f4B80AKWp5dP6ow+flD1LQZo/w8UnLGYZO674jS6YnYeepycOOksv+vLPSpgN35wgKgy+ybfTb2SMw==}
     dependencies:
-      '@noble/curves': 1.4.0
-      '@noble/hashes': 1.4.0
-      '@scure/base': 1.1.6
+      '@noble/curves': 1.9.0
+      '@noble/hashes': 1.8.0
+      '@scure/base': 1.2.5
     dev: false
 
-  /@scure/bip39@1.3.0:
-    resolution: {integrity: sha512-disdg7gHuTDZtY+ZdkmLpPCk7fxZSu3gBiEGuoC1XYxv9cGx3Z6cpTggCgW6odSOOIXCiDjuGejW+aJKCY/pIQ==}
+  /@scure/bip39@1.6.0:
+    resolution: {integrity: sha512-+lF0BbLiJNwVlev4eKelw1WWLaiKXw7sSl8T6FvBlWkdX+94aGJ4o8XjUdlyhTCjd8c+B3KT3JfS8P0bLRNU6A==}
     dependencies:
-      '@noble/hashes': 1.4.0
-      '@scure/base': 1.1.6
-    dev: false
-
-  /@suchipi/femver@1.0.0:
-    resolution: {integrity: sha512-bprE8+K5V+DPX7q2e2K57ImqNBdfGHDIWaGI5xHxZoxbKOuQZn4wzPiUxOAHnsUr3w3xHrWXwN7gnG/iIuEMIg==}
+      '@noble/hashes': 1.8.0
+      '@scure/base': 1.2.5
     dev: false
 
   /@types/node@20.12.12:
@@ -219,18 +215,8 @@ packages:
       possible-typed-array-names: 1.0.0
     dev: false
 
-  /base-x@5.0.1:
-    resolution: {integrity: sha512-M7uio8Zt++eg3jPj+rHMfCC+IuygQHHCOU+IYsVtik6FWjuYpVt/+MRKcgsAMHh8mMFAwnB+Bs+mTrFiXjMzKg==}
-    dev: false
-
   /bech32@2.0.0:
     resolution: {integrity: sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==}
-    dev: false
-
-  /bs58@6.0.0:
-    resolution: {integrity: sha512-PD0wEnEYg6ijszw/u8s+iI3H17cTymlrwkKhDhPZq+Sokl3AU4htyBFTjAeNAlCCmg0f53g6ih3jATyCKftTfw==}
-    dependencies:
-      base-x: 5.0.1
     dev: false
 
   /call-bind@1.0.7:
@@ -242,6 +228,11 @@ packages:
       function-bind: 1.1.2
       get-intrinsic: 1.2.4
       set-function-length: 1.2.2
+    dev: false
+
+  /colorts@0.1.63:
+    resolution: {integrity: sha512-prWZKocUjLYvt9Jx4j+KEkeQSm9rvGA2ZB90Je6odMyXPthpb1pTW9/0RxUZ/CRXc+DsydMLOQIrDBgdx5jjOg==}
+    engines: {node: '>=8.1.90'}
     dev: false
 
   /define-data-property@1.1.4:
@@ -430,6 +421,10 @@ packages:
       object-keys: 1.1.1
     dev: false
 
+  /poseidon-lite@0.2.1:
+    resolution: {integrity: sha512-xIr+G6HeYfOhCuswdqcFpSX47SPhm0EpisWJ6h7fHlWwaVIvH3dLnejpatrtw6Xc6HaLrpq05y7VRfvDmDGIog==}
+    dev: false
+
   /possible-typed-array-names@1.0.0:
     resolution: {integrity: sha512-d7Uw+eZoloe0EHDIYoe+bQ5WXnGMOpmiZFTuMWCwpjzzkL2nTjcKiAk4hh8TjnGye2TwWOk3UXucZ+3rbmBa8Q==}
     engines: {node: '>= 0.4'}
@@ -457,9 +452,9 @@ packages:
     engines: {node: '>=14.0.0'}
     dev: false
 
-  /ts-retry-promise@0.7.1:
-    resolution: {integrity: sha512-NhHOCZ2AQORvH42hOPO5UZxShlcuiRtm7P2jIq2L2RY3PBxw2mLnUsEdHrIslVBFya1v5aZmrR55lWkzo13LrQ==}
-    engines: {node: '>=6'}
+  /tmp@0.2.5:
+    resolution: {integrity: sha512-voyz6MApa1rQGUxT3E+BK7/ROe8itEx7vD8/HEvt4xwXucvQ5G5oeEiHkmHZJuBO21RpOf+YYm9MOivj709jow==}
+    engines: {node: '>=14.14'}
     dev: false
 
   /tsconfig-paths@4.2.0:
@@ -470,10 +465,6 @@ packages:
       minimist: 1.2.8
       strip-bom: 3.0.0
     dev: true
-
-  /tweetnacl@1.0.3:
-    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
-    dev: false
 
   /typescript@5.4.5:
     resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
