@@ -177,4 +177,25 @@ module scallop_referral_program::referral_revenue_pool {
       0
     }
   }
+
+  // ============== Test Only Functions ==============
+
+  #[test_only]
+  public fun create_for_test(ctx: &mut TxContext): ReferralRevenuePool {
+    ReferralRevenuePool {
+      id: object::new(ctx),
+      revenue: balance_bag::new(ctx),
+      ve_sca_revenue_data: table::new(ctx),
+    }
+  }
+
+  #[test_only]
+  public fun add_revenue_for_test<CoinType>(
+    pool: &mut ReferralRevenuePool,
+    ve_sca_key_id: ID,
+    balance: Balance<CoinType>,
+    ctx: &mut TxContext
+  ) {
+    add_revenue_to_ve_sca_referrer(pool, ve_sca_key_id, balance, ctx);
+  }
 }

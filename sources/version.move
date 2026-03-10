@@ -32,4 +32,27 @@ module scallop_referral_program::version {
   public fun assert_version(version: &Version) {
     assert!(version.value == CURRENT_VERSION, ERROR_VERSION_MISMATCH);
   }
+
+  // ============== Test Only Functions ==============
+
+  #[test_only]
+  public fun create_for_test(ctx: &mut TxContext): Version {
+    Version {
+      id: object::new(ctx),
+      value: CURRENT_VERSION,
+    }
+  }
+
+  #[test_only]
+  public fun create_with_value_for_test(ctx: &mut TxContext, value: u64): Version {
+    Version {
+      id: object::new(ctx),
+      value,
+    }
+  }
+
+  #[test_only]
+  public fun set_version_for_test(version: &mut Version, new_version: u64) {
+    set_version(version, new_version);
+  }
 }
