@@ -124,4 +124,16 @@ module scallop_referral_program::admin {
   ) {
     abort 0
   }
+
+  // ============== Test Only Functions ==============
+
+  #[test_only]
+  public fun create_admin_cap_for_test(ctx: &mut TxContext): AdminCap {
+    AdminCap { id: object::new(ctx) }
+  }
+
+  #[test_only]
+  public fun create_admin_cap_v2_for_test(ctx: &mut TxContext): AdminCapV2 {
+    AdminCapV2 { id: object::new(ctx) }
+  }
 }
