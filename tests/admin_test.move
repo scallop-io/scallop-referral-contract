@@ -271,4 +271,20 @@ module scallop_referral_program::admin_test {
     test_utils::destroy(tiers);
     test_scenario::end(scenario);
   }
+
+  #[test]
+  #[expected_failure(abort_code = 603, location = scallop_referral_program::referral_tiers)]
+  public fun test_admin_add_tier_with_invalid_percentages_fails() {
+    let scenario = test_scenario::begin(ADMIN_ADDR);
+    let ctx = test_scenario::ctx(&mut scenario);
+
+    let admin_cap = admin::create_admin_cap_v2_for_test(ctx);
+    let tiers = referral_tiers::create_for_test(ctx);
+
+    admin::add_referral_tier_v2(&admin_cap, &mut tiers, 0, 101, 5);
+
+    test_utils::destroy(admin_cap);
+    test_utils::destroy(tiers);
+    test_scenario::end(scenario);
+  }
 }

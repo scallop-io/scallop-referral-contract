@@ -22,6 +22,8 @@ module scallop_referral_program::referral_revenue_pool {
 
   friend scallop_referral_program::scallop_referral_program;
 
+  const ERROR_REVENUE_POOL_COIN_MISSING: u64 = 801;
+
   struct RevenueData has key, store {
     id: UID,
     bag: Bag,
@@ -81,27 +83,44 @@ module scallop_referral_program::referral_revenue_pool {
     if (!table::contains(&referral_revenue_pool.ve_sca_revenue_data, ve_sca_key_id)) {
       coin::zero(ctx)
     } else {
-      // Get the available revenue amount for the referrer.
       let coin_type = type_name::get<CoinType>();
-      let revenue_data = table::borrow_mut(&mut referral_revenue_pool.ve_sca_revenue_data, ve_sca_key_id);
-      let revenue_amount = revenue_amount(revenue_data, coin_type);
+      let revenue_balance = claim_revenue<CoinType>(referral_revenue_pool, ve_sca_key_id, coin_type);
+      let revenue_amount = balance::value(&revenue_balance);
 
-      // Take the revenue from the revenue pool.
+      if (revenue_amount == 0) {
+        balance::destroy_zero(revenue_balance);
+        coin::zero(ctx)
+      } else {
+        event::emit(ClaimRevenueEventV2 {
+          ve_sca_key_id,
+          coin_type,
+          claimed_amount: revenue_amount,
+          timestamp: clock::timestamp_ms(clock) / 1000
+        });
+
+        coin::from_balance(revenue_balance, ctx)
+      }
+    }
+  }
+
+  fun claim_revenue<CoinType>(
+    referral_revenue_pool: &mut ReferralRevenuePool,
+    ve_sca_key_id: ID,
+    coin_type: TypeName,
+  ): Balance<CoinType> {
+    let revenue_data = table::borrow_mut(&mut referral_revenue_pool.ve_sca_revenue_data, ve_sca_key_id);
+    let revenue_amount = revenue_amount(revenue_data, coin_type);
+
+    if (revenue_amount == 0) {
+      balance::zero()
+    } else {
+      assert!(
+        balance_bag::contains<CoinType>(&referral_revenue_pool.revenue),
+        ERROR_REVENUE_POOL_COIN_MISSING
+      );
       let revenue_balance = balance_bag::split<CoinType>(&mut referral_revenue_pool.revenue, revenue_amount);
-
-      // Decrease the revenue amount for the referrer.
       decrease_revenue_data(revenue_data, coin_type, revenue_amount);
-
-      // Emit the claim revenue event.
-      event::emit(ClaimRevenueEventV2 {
-        ve_sca_key_id,
-        coin_type,
-        claimed_amount: revenue_amount,
-        timestamp: clock::timestamp_ms(clock) / 1000
-      });
-
-      // Return the claimed revenue.
-      coin::from_balance(revenue_balance, ctx)
+      revenue_balance
     }
   }
 
@@ -197,5 +216,20 @@ module scallop_referral_program::referral_revenue_pool {
     ctx: &mut TxContext
   ) {
     add_revenue_to_ve_sca_referrer(pool, ve_sca_key_id, balance, ctx);
+  }
+
+  #[test_only]
+  public fun claim_revenue_for_test<CoinType>(
+    pool: &mut ReferralRevenuePool,
+    ve_sca_key_id: ID,
+    ctx: &mut TxContext
+  ): Coin<CoinType> {
+    let coin_type = type_name::get<CoinType>();
+    let revenue_balance = if (table::contains(&pool.ve_sca_revenue_data, ve_sca_key_id)) {
+      claim_revenue<CoinType>(pool, ve_sca_key_id, coin_type)
+    } else {
+      balance::zero()
+    };
+    coin::from_balance(revenue_balance, ctx)
   }
 }

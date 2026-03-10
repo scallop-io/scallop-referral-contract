@@ -35,17 +35,13 @@ module scallop_referral_program::referral_tiers_edge_test {
   }
 
   #[test]
-  public fun test_tier_with_u64_max_referral_share() {
+  #[expected_failure(abort_code = 603, location = scallop_referral_program::referral_tiers)]
+  public fun test_tier_with_u64_max_referral_share_should_fail() {
     let scenario = test_scenario::begin(SENDER);
     let ctx = test_scenario::ctx(&mut scenario);
     let tiers = referral_tiers::create_for_test(ctx);
 
-    // Extreme share/discount values (contract uses base 100, but doesn't enforce limits)
     referral_tiers::add_tier_for_test(&mut tiers, 0, 18446744073709551615, 18446744073709551615);
-
-    let (referral_share, fee_discount) = referral_tiers::find_tier(&tiers, 0);
-    assert!(referral_share == 18446744073709551615, 0);
-    assert!(fee_discount == 18446744073709551615, 1);
 
     test_utils::destroy(tiers);
     test_scenario::end(scenario);
@@ -87,17 +83,13 @@ module scallop_referral_program::referral_tiers_edge_test {
   }
 
   #[test]
-  public fun test_tier_with_above_100_percent() {
-    // Contract doesn't enforce percentage limits, test that values >100 are stored correctly
+  #[expected_failure(abort_code = 603, location = scallop_referral_program::referral_tiers)]
+  public fun test_tier_with_above_100_percent_should_fail() {
     let scenario = test_scenario::begin(SENDER);
     let ctx = test_scenario::ctx(&mut scenario);
     let tiers = referral_tiers::create_for_test(ctx);
 
     referral_tiers::add_tier_for_test(&mut tiers, 0, 200, 150);
-
-    let (referral_share, fee_discount) = referral_tiers::find_tier(&tiers, 0);
-    assert!(referral_share == 200, 0);
-    assert!(fee_discount == 150, 1);
 
     test_utils::destroy(tiers);
     test_scenario::end(scenario);

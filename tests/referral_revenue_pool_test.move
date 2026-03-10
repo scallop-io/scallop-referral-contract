@@ -8,6 +8,7 @@ module scallop_referral_program::referral_revenue_pool_test {
   use sui::object;
   use sui::balance;
   use sui::clock;
+  use sui::coin;
   use scallop_referral_program::referral_revenue_pool;
   use scallop_referral_program::version;
 
@@ -262,9 +263,48 @@ module scallop_referral_program::referral_revenue_pool_test {
   }
 
   // ==================== Empty Pool Claim Behavior ====================
-  // Note: claim_revenue_with_ve_sca_key requires a VeScaKey object which is hard to mock.
-  // The function returns coin::zero if no revenue exists, which is safe behavior.
-  // We test the add_revenue paths extensively since they don't require VeScaKey.
+
+  #[test]
+  public fun test_claim_existing_coin_type_for_test() {
+    let scenario = test_scenario::begin(REFERRER_ADDR);
+    let ctx = test_scenario::ctx(&mut scenario);
+
+    let pool = referral_revenue_pool::create_for_test(ctx);
+    let ve_sca_key_id = object::id_from_address(@0x5001);
+
+    let revenue = balance::create_for_testing<SUI>(1234);
+    referral_revenue_pool::add_revenue_for_test(&mut pool, ve_sca_key_id, revenue, ctx);
+
+    let claimed = referral_revenue_pool::claim_revenue_for_test<SUI>(&mut pool, ve_sca_key_id, ctx);
+    assert!(coin::value(&claimed) == 1234, 0);
+
+    let claimed_again = referral_revenue_pool::claim_revenue_for_test<SUI>(&mut pool, ve_sca_key_id, ctx);
+    assert!(coin::value(&claimed_again) == 0, 1);
+
+    coin::destroy_zero(claimed_again);
+    balance::destroy_for_testing(coin::into_balance(claimed));
+    test_utils::destroy(pool);
+    test_scenario::end(scenario);
+  }
+
+  #[test]
+  public fun test_claim_missing_coin_type_returns_zero() {
+    let scenario = test_scenario::begin(REFERRER_ADDR);
+    let ctx = test_scenario::ctx(&mut scenario);
+
+    let pool = referral_revenue_pool::create_for_test(ctx);
+    let ve_sca_key_id = object::id_from_address(@0x5001);
+
+    let revenue = balance::create_for_testing<SUI>(1234);
+    referral_revenue_pool::add_revenue_for_test(&mut pool, ve_sca_key_id, revenue, ctx);
+
+    let missing = referral_revenue_pool::claim_revenue_for_test<USDC>(&mut pool, ve_sca_key_id, ctx);
+    assert!(coin::value(&missing) == 0, 0);
+
+    coin::destroy_zero(missing);
+    test_utils::destroy(pool);
+    test_scenario::end(scenario);
+  }
 
   // ==================== Interleaved Multi-Referrer Multi-Coin ====================
 
