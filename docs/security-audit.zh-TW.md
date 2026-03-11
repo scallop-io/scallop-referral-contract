@@ -1,97 +1,83 @@
 # 安全審計報告：Scallop Referral Contract
 
-**合約**：`ScallopReferralProgram`  
-**Repository**：`scallop-io/scallop-referral-contract`  
-**審查日期**：2026-03-10  
-**依據**：目前本地原始碼、`sui move test`、`sui move test --coverage`
+[English](security-audit.md)
+
+**合約**：`ScallopReferralProgram`
+**Repository**：`scallop-io/scallop-referral-contract`
+**審計日期**：2026-03-10
+**依據**：原始碼審查、`sui move test`、`sui move test --coverage`
 
 ## 執行摘要
 
-先前的審計文件對目前版本的專案並不準確，尤其在測試覆蓋率與 finding 判斷上都有明顯失真。
+本次審計發現兩個程式層級問題，均已修正。合約採用 Move 標準安全機制（溢位中止算術運算、capability 管控的管理員函數、版本控制）。目前剩餘的缺口僅限於缺少使用真實 `VeScaTable` / `VeScaKey` 狀態的完整端對端整合測試。
 
-這次審查確認的兩個實際問題是：
+## 審計範圍
 
-1. Tier 設定允許大於 `100` 的百分比，會造成管理員配置錯誤。
-2. 已存在的 referrer 若對某個 `CoinType` 沒有收入，claim path 可能走到不合理分支，而不是乾淨地回傳 `0`。
+審查模組：
 
-以上兩點都已在程式中修正。
+- `sources/scallop_referral_program.move` — 推薦票據 claim/burn 生命週期
+- `sources/referral_bindings.move` — 受薦人與推薦人映射
+- `sources/referral_tiers.move` — 等級配置與查詢
+- `sources/referral_revenue_pool.move` — 收益分配與領取
+- `sources/admin.move` — 管理操作
+- `sources/version.move` — 版本守衛
+- `sources/sorted_list.move` — 排序清單工具
 
-## 更正後的判斷
+## 發現
 
-### 先前報告中不成立或誇大的部分
+### [M-01] 百分比配置允許超過 100 的數值（已修正）
 
-- `H-01 increase_revenue_data 算術溢位`: **不成立**
-  - 先前報告把 Move 整數運算當成會靜默 wrap。
-  - 這個前提在目前環境下是錯的：Move 的整數溢位會 abort，不會默默回繞。
-  - 因此不應被列為高風險鎖倉漏洞。
+- **模組**：`sources/referral_tiers.move`
+- **嚴重度**：Medium
+- **狀態**：Fixed
 
-- “Formal verification”、“fuzz testing” 與完整整合保證：**缺乏依據**
-  - 專案裡有單元測試，但沒有 formal verification artifact。
-  - 舊版本確實缺少 `scallop_referral_program` 的直接測試，但這點在本次審查後已不再成立。
-  - 即便如此，因為沒有 formal artifact，而且目前測試仍屬部分整合測試而非完整 end-to-end，所以先前文件仍然高估了整體保證程度。
+`add_tier` 中的 `referral_share` 與 `borrow_fee_discount` 參數接受任意 `u64` 值，無上限驗證。超過 100 的數值與預期的百分比語意不符。
 
-### 這次確認為有效的問題
+**修正方式**：
 
-#### 已修正：百分比配置缺乏驗證
+- 新增 `MAX_PERCENTAGE = 100` 常數
+- 新增 `ERROR_INVALID_REFERRAL_SHARE = 603` 與 `ERROR_INVALID_BORROW_FEE_DISCOUNT = 604`
+- 在 `add_tier` 中強制驗證
+- 在 tier 測試與 admin 入口點測試中新增回歸測試
 
-- 模組：`sources/referral_tiers.move`
-- 嚴重度：Medium
-- 狀態：Fixed
+### [L-01] 既有 referrer 的缺失 coin claim 路徑（已修正）
 
-原本 `referral_share` 與 `borrow_fee_discount` 是任意 `u64`，管理員可寫入超過 `100` 的數值，與註解中的百分比語意不一致。
+- **模組**：`sources/referral_revenue_pool.move`
+- **嚴重度**：Low
+- **狀態**：Fixed
 
-修正內容：
+當 referrer 存在於 `ve_sca_revenue_data` 但對被請求的 `CoinType` 沒有收入記錄時，claim 邏輯可能進入非預期的程式路徑，而非回傳零餘額。
 
-- 新增 `MAX_PERCENTAGE = 100`
-- 新增 `ERROR_INVALID_REFERRAL_SHARE = 603`
-- 新增 `ERROR_INVALID_BORROW_FEE_DISCOUNT = 604`
-- 在 `add_tier` 中強制檢查
-- 新增直接 tier 測試與 admin entry 測試
+**修正方式**：
 
-#### 已修正：既有 referrer 的缺失 coin claim path
+- 重構為共用的內部 claim 路徑
+- 請求收入為零時直接回傳零餘額
+- 新增防禦性斷言處理不一致狀態（帳上記錄非零但 pool 未初始化對應幣種）
+- 回歸測試涵蓋：正常 claim、重複 claim 回傳零、claim 不存在的幣種回傳零
 
-- 模組：`sources/referral_revenue_pool.move`
-- 嚴重度：Low
-- 狀態：Fixed
+## 設計觀察
 
-如果某個 referrer 已存在於 `ve_sca_revenue_data`，但對被 claim 的 `CoinType` 並沒有收入，claim 邏輯不該繼續往 pool split 的路徑走。
+### 綁定資料可能過期（資訊性）
 
-修正內容：
+- **模組**：`sources/referral_bindings.move`
 
-- 抽出共用 claim 內部邏輯
-- 請求的收入為 `0` 時直接回傳 zero balance
-- 若帳上記錄為非零，但 pool 沒有對應 coin bucket，加入防禦性 assert
-- 新增回歸測試：
-  - 正常 claim
-  - 重複 claim 會回傳 0
-  - claim 不存在的 coin type 會回傳 0
+綁定關係為持久性，但 veSCA 狀態會隨時間變化。推薦人的 veSCA 到期後綁定仍然存在。此為已知的產品行為，非程式缺陷，但可能造成使用者困惑。
 
-## 剩餘風險 / 測試缺口
+### 整合測試覆蓋（資訊性）
 
-### 主整合模組已有測試，但仍不是完整整合驗證
+- **模組**：`sources/scallop_referral_program.move`
 
-- 模組：`sources/scallop_referral_program.move`
-- 嚴重度：Informational
+主推薦票據流程透過 test-only wrapper 直接提供 veSCA 數量與綁定狀態進行測試。本 package 未執行經由真實 `VeScaTable` 與 `VeScaKey` 狀態的完整端對端測試。模組覆蓋率為 61.78%。
 
-主 referral ticket 流程現在已經有直接測試，coverage 提升到 `61.78%`。不過目前測試是透過 test-only wrapper 餵入 veSCA amount / binding 狀態，還不是使用真實 `VeScaTable` / `VeScaKey` 的完整 end-to-end 路徑。
+## 測試摘要
 
-因此，若審計結論聲稱 borrow referral 的整合行為已被完整驗證，仍然會過度樂觀。
+| 指標 | 數值 |
+|------|------|
+| 測試 | 129 / 129 通過 |
+| 整體覆蓋率 | 84.08% |
 
-### 綁定資料過期仍屬產品行為風險
-
-- 模組：`sources/referral_bindings.move`
-- 嚴重度：Informational
-
-binding 是持久的，但 veSCA 狀態是隨時間變化的。這不一定是安全漏洞，但仍可能造成使用者體驗上的混淆。
-
-## 目前測試現況
-
-- `129 / 129` 測試通過
-- 整體 Move coverage：`84.08%`
-- `referral_revenue_pool`：`67.70%`
-- `referral_tiers`：`87.72%`
-- `scallop_referral_program`：`61.78%`
+各模組覆蓋率詳見[測試報告](test-report.zh-TW.md)。
 
 ## 結論
 
-目前合約的實際狀態和先前報告描述並不一致。舊報告錯誤地列出高風險算術問題，也錯誤描述了整合測試現況。這次修正後，本地可確認的程式問題已處理完成；剩下最重要的風險不再是 `scallop_referral_program` 完全沒測，而是缺少真實 veSCA 狀態驅動的完整 end-to-end 測試。
+所有已發現的程式層級問題均已修正。合約受益於 Move 的溢位中止算術運算機制，可防止靜默整數回繞。目前主要剩餘缺口為缺少使用正式環境 `VeScaTable` / `VeScaKey` 物件的端對端整合測試。

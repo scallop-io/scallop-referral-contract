@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Scallop 推薦計畫
 
 這是一個在 Sui 區塊鏈上實現的智能合約，為 Scallop Protocol 提供推薦系統，使用戶能夠根據其 veSCA（投票鎖定的 SCA）持有量獲得推薦獎勵。
@@ -165,6 +167,13 @@ sui move test
 sui client publish --gas-budget 100000000
 ```
 
+## 文件
+
+| 文件 | English | 繁體中文 |
+|------|---------|---------|
+| 安全審計 | [security-audit.md](docs/security-audit.md) | [security-audit.zh-TW.md](docs/security-audit.zh-TW.md) |
+| 測試報告 | [test-report.md](docs/test-report.md) | [test-report.zh-TW.md](docs/test-report.zh-TW.md) |
+
 ## 合約地址
 
 ### 主網
@@ -184,6 +193,9 @@ sui client publish --gas-budget 100000000
 - 版本控制以確保升級後的相容性
 - 管理員權限模式用於特權操作
 - 綁定前驗證 veSCA 所有權
+- Move 原生溢位中止算術運算（無靜默整數回繞）
+
+詳細發現與修正內容請參閱[安全審計報告](docs/security-audit.zh-TW.md)（[English](docs/security-audit.md)）。
 
 ## 授權
 

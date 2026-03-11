@@ -1,3 +1,5 @@
+[繁體中文](README.zh-TW.md)
+
 # Scallop Referral Program
 
 A smart contract on Sui blockchain that implements a referral system for Scallop Protocol, enabling users to earn rewards through referrals based on their veSCA (vote-escrowed SCA) holdings.
@@ -163,6 +165,13 @@ sui move test
 sui client publish --gas-budget 100000000
 ```
 
+## Documentation
+
+| Document | English | 繁體中文 |
+|----------|---------|---------|
+| Security Audit | [security-audit.md](docs/security-audit.md) | [security-audit.zh-TW.md](docs/security-audit.zh-TW.md) |
+| Test Report | [test-report.md](docs/test-report.md) | [test-report.zh-TW.md](docs/test-report.zh-TW.md) |
+
 ## Contract Addresses
 
 ### Mainnet
@@ -182,6 +191,9 @@ This contract implements several security measures:
 - Version control to ensure compatibility after upgrades
 - Admin capability pattern for privileged operations
 - Validation of veSCA ownership before binding
+- Move's native abort-on-overflow arithmetic (no silent integer wrapping)
+
+For detailed findings and resolutions, see the [Security Audit Report](docs/security-audit.md) ([繁體中文](docs/security-audit.zh-TW.md)).
 
 ## License
 
