@@ -12,8 +12,11 @@ module scallop_referral_program::referral_tiers {
 
   friend scallop_referral_program::admin;
 
+  const MAX_PERCENTAGE: u64 = 100;
   const ERROR_TIER_EXISTS: u64 = 601;
   const ERROR_TIER_NOT_EXISTS: u64 = 602;
+  const ERROR_INVALID_REFERRAL_SHARE: u64 = 603;
+  const ERROR_INVALID_BORROW_FEE_DISCOUNT: u64 = 604;
 
   struct TierData has copy, store, drop {
     referral_share: u64, // base 100, 40 means 40%
@@ -49,6 +52,8 @@ module scallop_referral_program::referral_tiers {
   ) {
     // Make sure the tier does not exist.
     assert!(table::contains(&referral_tiers.tier_table, ve_sca_amount) == false, ERROR_TIER_EXISTS);
+    assert!(referral_share <= MAX_PERCENTAGE, ERROR_INVALID_REFERRAL_SHARE);
+    assert!(borrow_fee_discount <= MAX_PERCENTAGE, ERROR_INVALID_BORROW_FEE_DISCOUNT);
     let tier_data = TierData {
       referral_share,
       borrow_fee_discount,

@@ -11,6 +11,7 @@ module scallop_referral_program::scallop_referral_program {
   use sui::balance;
   use sui::event;
 
+  use protocol::app::{Self, AdminCap};
   use protocol::borrow_referral::{Self, AuthorizedWitnessList, BorrowReferral};
   use ve_sca::ve_sca::{Self, VeScaTable};
 
@@ -71,12 +72,31 @@ module scallop_referral_program::scallop_referral_program {
 
     // Calculate the borrow fee discount and referral share based on the veSCA.
     let ve_sca_key_id = option::destroy_some(optional_ve_sca_key_id);
-    let (borrow_fee_discount, referral_share) = calc_borrow_fee_discount_and_referral_share_based_on_ve_sca(
-      ve_sca_key_id,
-      ve_sca_table,
+    let ve_sca_amount = ve_sca::ve_sca_amount(ve_sca_key_id, ve_sca_table, clock);
+    let (borrow_fee_discount, referral_share) = calculate_referral_terms(
       referral_tiers,
-      clock
+      ve_sca_amount
     );
+
+    create_referral_ticket<CoinType>(
+      version,
+      authorized_witness_list,
+      ve_sca_key_id,
+      borrow_fee_discount,
+      referral_share,
+      ctx
+    )
+  }
+
+  fun create_referral_ticket<CoinType>(
+    version: &Version,
+    authorized_witness_list: &AuthorizedWitnessList,
+    ve_sca_key_id: ID,
+    borrow_fee_discount: u64,
+    referral_share: u64,
+    ctx: &mut TxContext
+  ): BorrowReferral<CoinType, REFERRAL_WITNESS> {
+    version::assert_version(version);
 
     // Create the borrow referral ticket.
     let referral_ticket = borrow_referral::create_borrow_referral<CoinType, REFERRAL_WITNESS>(
@@ -97,16 +117,20 @@ module scallop_referral_program::scallop_referral_program {
     referral_ticket
   }
 
-  /// @notice Burn a veSCA referral ticket after the borrower has finished borrowing,
-  ///         put the referral revenue into the reward pool, and increase the reward amount for the referrer.
-  /// @param version The version of the protocol contract.
-  /// @param referral_ticket The referral ticket to burn.
-  /// @param ctx The transaction context.
-  public fun burn_ve_sca_referral_ticket<CoinType>(
+  fun calculate_referral_terms(
+    referral_tiers: &ReferralTiers,
+    ve_sca_amount: u64
+  ): (u64, u64) {
+    let (referral_share, borrow_fee_discount) = referral_tiers::find_tier(referral_tiers, ve_sca_amount);
+    (borrow_fee_discount, referral_share)
+  }
+
+  fun burn_referral_ticket<CoinType>(
     version: &Version,
     referral_ticket: BorrowReferral<CoinType, REFERRAL_WITNESS>,
     referral_revenue_pool: &mut ReferralRevenuePool,
-    clock: &Clock,
+    borrower: address,
+    timestamp: u64,
     ctx: &mut TxContext
   ) {
     // Make sure the version is correct.
@@ -129,13 +153,13 @@ module scallop_referral_program::scallop_referral_program {
     // Emit the BorrowReferralEvent.
     event::emit(BorrowReferralEvent {
       coin_type,
-      borrower: tx_context::sender(ctx),
+      borrower,
       referrer_ve_sca_key_id: ve_sca_key_id,
       borrowed,
       borrow_fee_discount,
       referral_share,
       referral_fee: balance::value(&referral_revenue),
-      timestamp: clock::timestamp_ms(clock) / 1000
+      timestamp
     });
 
     // Add the referral revenue to the referrer.
@@ -143,6 +167,28 @@ module scallop_referral_program::scallop_referral_program {
       referral_revenue_pool,
       ve_sca_key_id,
       referral_revenue,
+      ctx
+    );
+  }
+
+  /// @notice Burn a veSCA referral ticket after the borrower has finished borrowing,
+  ///         put the referral revenue into the reward pool, and increase the reward amount for the referrer.
+  /// @param version The version of the protocol contract.
+  /// @param referral_ticket The referral ticket to burn.
+  /// @param ctx The transaction context.
+  public fun burn_ve_sca_referral_ticket<CoinType>(
+    version: &Version,
+    referral_ticket: BorrowReferral<CoinType, REFERRAL_WITNESS>,
+    referral_revenue_pool: &mut ReferralRevenuePool,
+    clock: &Clock,
+    ctx: &mut TxContext
+  ) {
+    burn_referral_ticket(
+      version,
+      referral_ticket,
+      referral_revenue_pool,
+      tx_context::sender(ctx),
+      clock::timestamp_ms(clock) / 1000,
       ctx
     );
   }
@@ -160,7 +206,60 @@ module scallop_referral_program::scallop_referral_program {
     clock: &Clock
   ): (u64, u64) {
     let ve_sca_amount = ve_sca::ve_sca_amount(ve_sca_key_id, ve_sca_table, clock);
-    let (referral_share, borrow_fee_discount) = referral_tiers::find_tier(referral_tiers, ve_sca_amount);
-    (borrow_fee_discount, referral_share)
+    calculate_referral_terms(referral_tiers, ve_sca_amount)
+  }
+
+  #[test_only]
+  public fun authorize_referral_witness_for_test(
+    admin_cap: &AdminCap,
+    authorized_witness_list: &mut AuthorizedWitnessList
+  ) {
+    app::add_referral_witness_list<REFERRAL_WITNESS>(admin_cap, authorized_witness_list);
+  }
+
+  #[test_only]
+  public fun claim_ve_sca_referral_ticket_with_ve_sca_amount_for_test<CoinType>(
+    version: &Version,
+    referral_bindings: &ReferralBindings,
+    authorized_witness_list: &AuthorizedWitnessList,
+    referral_tiers: &ReferralTiers,
+    ve_sca_amount: u64,
+    ctx: &mut TxContext
+  ): BorrowReferral<CoinType, REFERRAL_WITNESS> {
+    let sender = tx_context::sender(ctx);
+    let optional_ve_sca_key_id = referral_bindings::get_binding(referral_bindings, sender);
+    assert!(option::is_some(&optional_ve_sca_key_id), ENotReferralBinding);
+
+    let ve_sca_key_id = option::destroy_some(optional_ve_sca_key_id);
+    let (borrow_fee_discount, referral_share) = calculate_referral_terms(referral_tiers, ve_sca_amount);
+
+    create_referral_ticket<CoinType>(
+      version,
+      authorized_witness_list,
+      ve_sca_key_id,
+      borrow_fee_discount,
+      referral_share,
+      ctx
+    )
+  }
+
+  #[test_only]
+  public fun burn_ve_sca_referral_ticket_for_test<CoinType>(
+    version: &Version,
+    referral_ticket: BorrowReferral<CoinType, REFERRAL_WITNESS>,
+    referral_revenue_pool: &mut ReferralRevenuePool,
+    borrower: address,
+    timestamp: u64,
+    ctx: &mut TxContext
+  ) {
+    burn_referral_ticket(version, referral_ticket, referral_revenue_pool, borrower, timestamp, ctx);
+  }
+
+  #[test_only]
+  public fun calc_borrow_fee_discount_and_referral_share_for_amount_for_test(
+    referral_tiers: &ReferralTiers,
+    ve_sca_amount: u64
+  ): (u64, u64) {
+    calculate_referral_terms(referral_tiers, ve_sca_amount)
   }
 }

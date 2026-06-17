@@ -9,8 +9,8 @@ module scallop_referral_program::referral_tiers_test {
 
   #[test]
   public fun referral_tiers_test() {
-    let senario = test_scenario::begin(SENDER);
-    let ctx = test_scenario::ctx(&mut senario);
+    let scenario = test_scenario::begin(SENDER);
+    let ctx = test_scenario::ctx(&mut scenario);
     let tiers = referral_tiers::create_for_test(ctx);
     referral_tiers::add_tier_for_test(&mut tiers, 0, 10, 10);
     referral_tiers::add_tier_for_test(&mut tiers, 100, 15, 10);
@@ -48,7 +48,7 @@ module scallop_referral_program::referral_tiers_test {
     assert!(fee_discount == 10, 0);
 
     test_utils::destroy(tiers);
-    test_scenario::end(senario);
+    test_scenario::end(scenario);
   }
 
   #[test]
@@ -239,4 +239,3 @@ module scallop_referral_program::referral_tiers_test {
     test_scenario::end(scenario);
   }
 }
-
