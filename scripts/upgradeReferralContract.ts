@@ -1,69 +1,83 @@
-import * as path from "path";
-import { PackageBatch } from "@scallop-io/sui-package-kit";
-import { adminSuiKit, packagePublisher } from "./suiElements";
-import publishResult from "../publish-result.production.json";
-import { MULTI_SIG_ADDRESS } from "./multiSig";
-import { SuiClient } from "@mysten/sui/client";
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { Transaction, UpgradePolicy, toBase64 } from '@scallop-io/sui-kit';
+import { adminSuiKit, packagePublisher } from './suiElements';
+import publishResult from '../publish-result.production.json' with { type: 'json' };
+import { MULTI_SIG_ADDRESS } from './multiSig';
 
-const lendingContractsPath = "../../sui-lending-protocol/contracts";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const borrowReferralPkgPath = path.join(__dirname, '..');
+
+// Gas is reserved from the multisig's own coins, so the budget has to be
+// something it actually holds or the build fails during gas selection. An
+// upgrade of this package simulates at ~0.073 SUI, so 0.3 SUI is ~4x headroom.
+// sui-package-kit used to hardcode 1 SUI, which the multisig can no longer cover.
+const GAS_BUDGET = Number(process.env.UPGRADE_GAS_BUDGET ?? 3 * 10 ** 8);
 
 /**
- * Oracle related dependencies
+ * Build the referral package upgrade transaction for the multisig to sign.
+ *
+ * The transaction is built here rather than through
+ * `packagePublisher.createUpgradePackageTxWithDependencies`, because that helper
+ * builds the transaction with sui-package-kit's own (JSON-RPC only) SDK copy,
+ * and public fullnodes no longer serve JSON-RPC. Only the compile step comes
+ * from sui-package-kit -- that one shells out to `sui move build` and needs no
+ * network access.
+ *
+ * Every dependency in Move.toml is a pinned git dependency (see Move.lock), so
+ * there are no local dependency packages whose Move.toml needs swapping first.
  */
-const xOraclePath = path.join(__dirname, `${lendingContractsPath}/sui_x_oracle/x_oracle`);
-const wormholePath = path.join(__dirname, `${lendingContractsPath}/sui_x_oracle/pyth_rule/vendors/wormhole`);
-const pythOraclePath = path.join(__dirname, `${lendingContractsPath}/sui_x_oracle/pyth_rule/vendors/pyth`);
-const pythRulePath = path.join(__dirname, `${lendingContractsPath}/sui_x_oracle/pyth_rule`);
+export const buildUpgradeBorrowReferralTx = async () => {
+  const { modules, dependencies, digest } =
+    packagePublisher.packagePublisher.buildPackage(borrowReferralPkgPath);
 
-/**
- * Protocol related dependencies
- */
-const mathPkgPath = path.join(__dirname, `${lendingContractsPath}/libs/math`);
-const xPkgPath = path.join(__dirname, `${lendingContractsPath}/libs/x`);
-const decimalPkgPath = path.join(__dirname, `${lendingContractsPath}/libs/x`);
-const whitelistPkgPath = path.join(__dirname, `${lendingContractsPath}/libs/whitelist`);
-const coinDecimalsRegistryPath = path.join(__dirname, `${lendingContractsPath}/libs/coin_decimals_registry`);
+  const tx = new Transaction();
+  tx.setSender(MULTI_SIG_ADDRESS);
+  tx.setGasBudget(GAS_BUDGET);
 
-const borrowReferralPkgPath = path.join(__dirname, "../");
-const protocolPkgPath = path.join(__dirname, `${lendingContractsPath}/protocol`);
-const veScaPkgPath = path.join(__dirname, "../../ve-sca");
-const scaPkgPath = path.join(__dirname, "../../scallop-token/sca");
+  const ticket = tx.moveCall({
+    target: '0x2::package::authorize_upgrade',
+    arguments: [
+      tx.object(publishResult.upgradeCap),
+      tx.pure.u8(UpgradePolicy.COMPATIBLE),
+      tx.pure.vector('u8', digest),
+    ],
+  });
 
-const borrowReferralPackageList: PackageBatch = [
-    // Oracle related dependencies
-    { packagePath: xOraclePath },
-    { packagePath: wormholePath },
-    { packagePath: pythOraclePath },
-    { packagePath: pythRulePath },
+  const receipt = tx.upgrade({
+    modules,
+    dependencies,
+    package: publishResult.packageId,
+    ticket,
+  });
 
-    // Protocol related dependencies
-    { packagePath: mathPkgPath },
-    { packagePath: xPkgPath },
-    { packagePath: decimalPkgPath },
-    { packagePath: whitelistPkgPath },
-    { packagePath: coinDecimalsRegistryPath },
-    { packagePath: protocolPkgPath },
+  tx.moveCall({
+    target: '0x2::package::commit_upgrade',
+    arguments: [tx.object(publishResult.upgradeCap), receipt],
+  });
 
-    { packagePath: scaPkgPath },
-    { packagePath: veScaPkgPath },
-];
+  const txBytes = await tx.build({ client: adminSuiKit.client });
+  return { txBytes, txBytesBase64: toBase64(txBytes) };
+};
 
-export const upgradeBorrowReferral = async (
-    client: SuiClient
-) => {
-    const upgradeTx = await packagePublisher.createUpgradePackageTxWithDependencies(
-        borrowReferralPkgPath,
-        publishResult.packageId,
-        publishResult.upgradeCap,
-        borrowReferralPackageList,
-        client,
-        MULTI_SIG_ADDRESS
-    );
-    const result = await client.dryRunTransactionBlock({
-        transactionBlock: upgradeTx?.txBytesBase64!
-    })
-    console.log(result)
-    return upgradeTx?.txBytesBase64
-}
+export const upgradeBorrowReferral = async () => {
+  const { txBytes, txBytesBase64 } = await buildUpgradeBorrowReferralTx();
 
-upgradeBorrowReferral(adminSuiKit.client).then(console.log).catch(console.error).finally(() => process.exit(0));
+  // `dryRunTxn` goes through gRPC `simulateTransaction`; the old
+  // `client.dryRunTransactionBlock` was JSON-RPC and no longer exists.
+  // The result is a `{ $kind, Transaction | FailedTransaction }` union.
+  const result = await adminSuiKit.dryRunTxn(txBytes);
+  const simulated = result.Transaction ?? result.FailedTransaction;
+  console.dir(simulated, { depth: null });
+
+  if (!simulated.status.success) {
+    throw new Error(`Dry run failed: ${JSON.stringify(simulated.status.error)}`);
+  }
+
+  return txBytesBase64;
+};
+
+upgradeBorrowReferral()
+  .then(console.log)
+  .catch(console.error)
+  .finally(() => process.exit(0));

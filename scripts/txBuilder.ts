@@ -1,5 +1,5 @@
 import { SuiTxBlock } from '@scallop-io/sui-kit';
-import Contract from '../publish-result.production.json';
+import Contract from '../publish-result.production.json' with { type: 'json' };
 
 export class ScallopReferralTxBuilder {
   static addReferralTierV2(tx: SuiTxBlock, veSCA: number, referralShare: number, borrow_fee_discount: number) {

@@ -1,11 +1,6 @@
 {
-  "ts-node": {
-    "require": [
-      "tsconfig-paths/register"
-    ]
-  },
   "compilerOptions": {
-    "target": "es2020",
+    "target": "es2022",
     "lib": [
       "dom",
       "dom.iterable",
@@ -13,7 +8,14 @@
     ],
     "allowJs": true,
     "baseUrl": ".",
-    // output .d.testnet-data-setup declaration files for consumers
+    // sui-package-kit's `exports` map has no `types` condition, so "bundler"
+    // resolution cannot find its declarations. Point at them directly.
+    "paths": {
+      "@scallop-io/sui-package-kit": [
+        "./node_modules/@scallop-io/sui-package-kit"
+      ]
+    },
+    // output .d.ts declaration files for consumers
     "declaration": true,
     "emitDeclarationOnly": true,
     // output .js.map sourcemap files for consumers
@@ -26,8 +28,11 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": false,
     "esModuleInterop": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
+    // @mysten/sui v2 and @scallop-io/sui-kit v2 are ESM-only and expose their
+    // entrypoints through the `exports` map, so `node` resolution cannot see them.
+    // This also replaces the old `tsconfig-paths/register` ts-node hook, which is CJS-only.
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -36,6 +41,6 @@
   "exclude": [
     "node_modules",
     "example",
-    "dist",
+    "dist"
   ]
 }

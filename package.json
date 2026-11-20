@@ -3,20 +3,24 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "typecheck": "tsc --noEmit",
+    "upgrade-referral": "tsx scripts/upgradeReferralContract.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "tsconfig-paths": "^4.2.0"
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@mysten/sui": "1.28.2",
-    "@scallop-io/sui-kit": "^1.4.0",
+    "@mysten/sui": "~2.22.1",
+    "@scallop-io/sui-kit": "2.2.0",
     "@scallop-io/sui-package-kit": "^1.21.3",
-    "@types/node": "^20.12.12",
     "dotenv": "^16.4.5"
   }
 }
